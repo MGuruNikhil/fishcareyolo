@@ -1,0 +1,178 @@
+# Implementation Plan
+
+- [ ] 1. Set up YOLOv8 model training (Python)
+  - [ ] 1.1 Set up Python environment with ultralytics
+    - Add ultralytics, torch, hypothesis dependencies to pyproject.toml
+    - Create training script structure
+    - _Design: Training Pipeline_
+  - [ ] 1.2 Prepare fish disease dataset
+    - Create data directory structure (images/train, images/val, labels/train, labels/val)
+    - Create data.yaml config file with disease classes (fin_rot, ich, fungal_infection, bacterial_infection, healthy)
+    - _Design: Training Pipeline_
+  - [ ] 1.3 Train YOLOv8 model on fish disease data
+    - Train YOLOv8n (nano) model for mobile performance
+    - Configure training parameters (epochs=100, batch=16, imgsz=640)
+    - Save best weights based on validation mAP
+    - _Requirements: 4.1_
+  - [ ] 1.4 Export model to TFLite format
+    - Export trained model to TFLite with int8 quantization
+    - Ensure model size is reasonable for mobile bundling
+    - _Requirements: 2.1_
+  - [ ] 1.5 Write property test for TFLite export equivalence
+    - **Property 8: TFLite export equivalence**
+    - **Validates: Design - Training Pipeline**
+  - [ ] 1.6 Create model inference testing script
+    - Test inference on sample images
+    - Verify output format matches expected Detection structure
+    - _Requirements: 4.2_
+
+- [ ] 2. Set up Expo project foundation
+  - [ ] 2.1 Install required dependencies
+    - Add expo-camera, expo-image-picker, expo-haptics for capture
+    - Add react-native-fast-tflite for on-device inference
+    - Add fast-check and @testing-library/react-native for testing
+    - _Requirements: 1.1, 2.1, 2.2_
+  - [ ] 2.2 Create data model types and validation functions
+    - Define BoundingBox, Detection, DetectionSession, DiseaseInfo types
+    - Create validation functions for each type
+    - _Requirements: 4.2_
+  - [ ] 2.3 Write property test for detection structure validation
+    - **Property 5: Detection result structure**
+    - **Validates: Requirements 4.2**
+  - [ ] 2.4 Create JSON serialization and parsing functions for DetectionSession
+    - Implement serializeSession and parseSession functions
+    - Handle edge cases for malformed JSON
+    - _Requirements: 4.4, 4.5_
+  - [ ] 2.5 Write property test for serialization round-trip
+    - **Property 1: Detection session round-trip**
+    - **Validates: Requirements 4.4, 4.5**
+
+- [ ] 3. Implement storage service
+  - [ ] 3.1 Create StorageService with AsyncStorage
+    - Implement saveSession, getSessions, getSession, deleteSession, clearAll
+    - Use serialization functions from 2.4
+    - _Requirements: 5.1_
+  - [ ] 3.2 Implement history sorting by timestamp (newest first)
+    - Sort sessions in descending order when retrieving
+    - _Requirements: 5.4_
+  - [ ] 3.3 Write property test for history sorting
+    - **Property 4: History sorting by timestamp**
+    - **Validates: Requirements 5.4**
+
+- [ ] 4. Implement inference service
+  - [ ] 4.1 Create InferenceService with react-native-fast-tflite
+    - Implement loadModel, isModelLoaded, runInference, dispose
+    - Bundle TFLite model from step 1.4 as asset
+    - _Requirements: 2.1, 2.2, 4.1_
+  - [ ] 4.2 Implement confidence filtering (threshold 0.3)
+    - Filter out low-confidence detections before returning results
+    - _Requirements: 4.3_
+  - [ ] 4.3 Write property test for confidence filtering
+    - **Property 2: Confidence filtering**
+    - **Validates: Requirements 4.3**
+  - [ ] 4.4 Implement detection sorting by confidence (descending)
+    - Sort detections by confidence before returning
+    - _Requirements: 3.3_
+  - [ ] 4.5 Write property test for detection sorting
+    - **Property 3: Detection sorting by confidence**
+    - **Validates: Requirements 3.3**
+
+- [ ] 5. Checkpoint
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 6. Create disease info data
+  - [ ] 6.1 Create DiseaseInfo entries for all disease classes
+    - Include displayName, description, symptoms, treatments, severity for each
+    - Cover: fin_rot, ich, fungal_infection, bacterial_infection, healthy
+    - _Requirements: 6.1, 6.2_
+  - [ ] 6.2 Write property test for disease info completeness
+    - **Property 6: Disease info completeness**
+    - **Validates: Requirements 6.1, 6.2**
+  - [ ] 6.3 Create bounding box color mapping function
+    - Map diseaseClass to color (green=healthy, yellow=low severity, red=medium/high)
+    - _Requirements: 8.3_
+  - [ ] 6.4 Write property test for bounding box color mapping
+    - **Property 7: Bounding box color mapping**
+    - **Validates: Requirements 8.3**
+
+- [ ] 7. Build camera screen
+  - [ ] 7.1 Create CameraView component with expo-camera
+    - Display live camera preview
+    - Add capture button with haptic feedback
+    - Add gallery button for image picker
+    - _Requirements: 1.1, 1.2, 7.2_
+  - [ ] 7.2 Handle camera permissions
+    - Request permission on mount
+    - Show explanation message if denied with link to settings
+    - _Requirements: 1.4_
+  - [ ] 7.3 Implement image capture flow
+    - Capture frame on button tap
+    - Provide immediate visual feedback (flash animation)
+    - Navigate to results screen with captured image
+    - _Requirements: 1.2, 7.2_
+  - [ ] 7.4 Implement gallery selection flow
+    - Open image picker on gallery button tap
+    - Load selected image for analysis
+    - Navigate to results screen
+    - _Requirements: 1.3_
+
+- [ ] 8. Build results screen
+  - [ ] 8.1 Create DetectionOverlay component
+    - Render image with bounding boxes overlaid
+    - Use color mapping for box colors
+    - Animate boxes appearing progressively
+    - _Requirements: 3.1, 7.4, 8.3_
+  - [ ] 8.2 Create DetectionResultCard component
+    - Show disease name and confidence as percentage
+    - Make tappable to navigate to disease info
+    - _Requirements: 3.2, 6.3_
+  - [ ] 8.3 Build results screen layout
+    - Run inference on mount and show loading state
+    - Display DetectionOverlay with image
+    - List DetectionResultCards sorted by confidence
+    - Show "fish appears healthy" message when no detections
+    - Save session to storage on completion
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 5.1_
+
+- [ ] 9. Build history screen
+  - [ ] 9.1 Create HistoryList component
+    - Display list of past sessions with thumbnails and timestamps
+    - Sort by timestamp descending (newest first)
+    - _Requirements: 5.2, 5.4_
+  - [ ] 9.2 Build history screen with navigation
+    - Load sessions from storage on mount
+    - Navigate to results screen on item tap
+    - _Requirements: 5.2, 5.3_
+
+- [ ] 10. Build disease info screen
+  - [ ] 10.1 Create disease info screen
+    - Display disease name, description, symptoms list, treatments list
+    - Style with severity-appropriate colors
+    - _Requirements: 6.1, 6.2, 6.3_
+
+- [ ] 11. Build onboarding flow
+  - [ ] 11.1 Create onboarding screens (3 screens max)
+    - Screen 1: Welcome and app purpose
+    - Screen 2: How to capture/scan
+    - Screen 3: Understanding results
+    - _Requirements: 8.5_
+  - [ ] 11.2 Implement first-launch detection
+    - Show onboarding only on first app open
+    - Store completion flag in AsyncStorage
+    - _Requirements: 8.5_
+
+- [ ] 12. Apply visual polish
+  - [ ] 12.1 Implement aquatic color theme
+    - Define color palette (blues, teals, soft whites)
+    - Apply consistently across all screens
+    - _Requirements: 8.1_
+  - [ ] 12.2 Add smooth screen transitions
+    - Configure Expo Router with animated transitions
+    - Keep transitions under 300ms
+    - _Requirements: 7.3_
+  - [ ] 12.3 Ensure touch target accessibility
+    - Verify all interactive elements are minimum 44x44 points
+    - _Requirements: 8.2_
+
+- [ ] 13. Final checkpoint
+  - Ensure all tests pass, ask the user if questions arise.
