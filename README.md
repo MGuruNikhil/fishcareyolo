@@ -1,4 +1,4 @@
-# Fish Care (FishCareYOLO)
+# Fish Care
 
 Offline-first, on-device fish disease detection for mobile.
 
