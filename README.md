@@ -22,8 +22,8 @@ This repo is currently in the **initiation phase**: the overall plan is defined,
 
 ## Repository Layout
 
-- `expo-app/`: Expo (React Native) app workspace (Expo Router + NativeWind, etc.)
-- `python-model/`: Python workspace for model training/export (scaffolded)
+- `app/`: Expo (React Native) app workspace (Expo Router + NativeWind, etc.)
+- `model/`: Python workspace for model training/export (scaffolded)
 ## Roadmap
 
 High-level phases:
@@ -36,10 +36,10 @@ High-level phases:
 
 ## Getting Started (Development)
 
-### Mobile app (`expo-app/`)
+### Mobile app (`app/`)
 
 ```bash
-cd expo-app
+cd app
 bun install
 bun run dev
 ```
@@ -64,14 +64,14 @@ bun run fix
 
 (`bun run fix` formats via Biome.)
 
-### Python model pipeline (`python-model/`)
+### Python model pipeline (`model/`)
 
-`python-model/pyproject.toml` exists, but dependencies/scripts are not wired up yet.
+`model/pyproject.toml` exists, but dependencies/scripts are not wired up yet.
 
 When it’s ready, the intended workflow is via `uv`:
 
 ```bash
-cd python-model
+cd model
 uv sync
 ```
 

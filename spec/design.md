@@ -64,7 +64,7 @@ graph TB
 ### Dataset Structure
 
 ```
-python-model/
+model/
   data/
     images/
       train/          # Training images
@@ -373,13 +373,13 @@ Unit tests cover:
 ### Test Organization
 
 ```
-python-model/
+model/
   tests/
     test_training.py         # Training config tests
     test_export.py           # TFLite export equivalence (Property 8)
     test_inference.py        # Model output format tests
 
-expo-app/
+app/
   __tests__/
     models/
       detection.test.ts      # Property tests for data models
