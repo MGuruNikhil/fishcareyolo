@@ -14,6 +14,7 @@ def export_tflite(
     int8: bool = True,
     imgsz: int = 640,
     output_dir: str | Path | None = None,
+    nms: bool = False,
 ) -> Path:
     """
     Export YOLOv8 model to TFLite format.
@@ -23,6 +24,9 @@ def export_tflite(
         int8: Whether to use int8 quantization (recommended for mobile)
         imgsz: Input image size for the exported model
         output_dir: Optional output directory (defaults to same as weights)
+        nms: Whether to include NMS in the model. Default False because
+             onnx2tf has issues with TopK operations used in YOLO NMS.
+             NMS should be handled in the app instead.
 
     Returns:
         Path to the exported TFLite model
@@ -38,15 +42,17 @@ def export_tflite(
     print(f"Loading model from: {weights_path}")
     model = YOLO(str(weights_path))
 
-    print(f"Exporting to TFLite (int8={int8}, imgsz={imgsz})...")
+    print(f"Exporting to TFLite (int8={int8}, imgsz={imgsz}, nms={nms})...")
 
     # Export to TFLite
+    # Note: nms=False by default because onnx2tf has issues with TopK operations
+    # used in YOLO NMS. NMS should be handled in the Flutter app instead.
     export_path = model.export(
         format="tflite",
         int8=int8,
         imgsz=imgsz,
         simplify=True,
-        nms=True,  # Include NMS in the model
+        nms=nms,
     )
 
     export_path = Path(export_path)

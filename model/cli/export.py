@@ -38,6 +38,11 @@ def main():
         default=None,
         help="Output directory for the TFLite model",
     )
+    parser.add_argument(
+        "--nms",
+        action="store_true",
+        help="Include NMS in the model (may fail due to onnx2tf TopK issues)",
+    )
 
     args = parser.parse_args()
 
@@ -48,6 +53,7 @@ def main():
         int8=not args.no_int8,
         imgsz=args.imgsz,
         output_dir=args.output_dir,
+        nms=args.nms,
     )
 
 
