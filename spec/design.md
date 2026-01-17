@@ -2,7 +2,7 @@
 
 ## Overview
 
-Fish Care is an offline-first mobile app for real-time fish disease detection. The system has two main parts:
+Mina is an offline-first mobile app for real-time fish disease detection. The system has two main parts:
 
 1. **Training Pipeline (Python)**: Uses ultralytics to train a YOLOv8n model on fish disease images, then exports to TFLite for mobile
 2. **Mobile App (Expo)**: Runs the TFLite model on-device for instant offline detection
