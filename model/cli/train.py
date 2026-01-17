@@ -2,7 +2,7 @@
 CLI for training the fish disease detection model.
 
 Usage:
-    uv run mina-train [--epochs N] [--batch N] [--imgsz N] [--name NAME]
+    uv run mina-train [--epochs N] [--batch N] [--imgsz N] [--name NAME] [--device DEVICE]
 """
 
 import argparse
@@ -39,6 +39,12 @@ def main():
         default="fish_disease",
         help="Training run name (default: fish_disease)",
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="Device to train on: '0' for GPU, 'cpu' for CPU (default: auto-detect)",
+    )
 
     args = parser.parse_args()
 
@@ -47,6 +53,7 @@ def main():
         batch=args.batch,
         imgsz=args.imgsz,
         name=args.name,
+        device=args.device,
     )
 
 

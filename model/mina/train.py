@@ -53,6 +53,15 @@ def get_data_yaml_path(data_dir: Path | None = None) -> Path:
     )
 
 
+def get_device() -> str:
+    """Get the best available device for training."""
+    import torch
+
+    if torch.cuda.is_available():
+        return "0"  # Use first GPU
+    return "cpu"
+
+
 def train(
     epochs: int = DEFAULT_EPOCHS,
     batch: int = DEFAULT_BATCH_SIZE,
@@ -61,6 +70,7 @@ def train(
     pretrained: str = "yolov8n.pt",
     data_dir: Path | None = None,
     patience: int = DEFAULT_PATIENCE,
+    device: str | None = None,
 ) -> Path:
     """
     Train YOLOv8n model on fish disease dataset.
@@ -73,12 +83,18 @@ def train(
         pretrained: Pretrained model to start from
         data_dir: Optional data directory
         patience: Early stopping patience
+        device: Device to train on ('0' for GPU, 'cpu' for CPU, None for auto-detect)
 
     Returns:
         Path to the best model weights
     """
     data_yaml = get_data_yaml_path(data_dir)
     print(f"Using dataset config: {data_yaml}")
+
+    # Auto-detect device if not specified
+    if device is None:
+        device = get_device()
+    print(f"Using device: {device}")
 
     # Load YOLOv8 nano model (optimized for mobile)
     model = YOLO(pretrained)
@@ -96,7 +112,7 @@ def train(
         # Training optimizations
         patience=patience,
         workers=4,
-        device="auto",  # Use GPU if available
+        device=device,
         # Augmentation settings for better generalization
         hsv_h=0.015,
         hsv_s=0.7,
