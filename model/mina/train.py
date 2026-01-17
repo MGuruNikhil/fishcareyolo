@@ -1,36 +1,46 @@
 """
-YOLOv8n Training Script for Fish Disease Detection
-
-This script trains a YOLOv8 nano model on the fish disease dataset.
-The nano variant is optimized for mobile deployment.
-
-Usage:
-    python train.py [--epochs EPOCHS] [--batch BATCH] [--imgsz IMGSZ]
+Training logic for fish disease detection model.
 """
 
-import argparse
 from pathlib import Path
 
 from ultralytics import YOLO
 
-
-# Disease classes from the Roboflow dataset
-DISEASE_CLASSES = [
-    "bacterial_infection",
-    "fungal_infection",
-    "healthy",
-    "parasite",
-    "white_tail",
-]
+from mina.core.constants import (
+    DATA_DIR,
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_EPOCHS,
+    DEFAULT_IMAGE_SIZE,
+    DEFAULT_PATIENCE,
+)
 
 
-def get_data_yaml_path() -> Path:
-    """Get the path to the data.yaml configuration file."""
+def get_data_yaml_path(data_dir: Path | None = None) -> Path:
+    """
+    Get the path to the data.yaml configuration file.
+
+    Args:
+        data_dir: Optional data directory. If None, searches common locations.
+
+    Returns:
+        Path to data.yaml
+
+    Raises:
+        FileNotFoundError: If data.yaml not found
+    """
+    if data_dir is not None:
+        yaml_path = data_dir / "data.yaml"
+        if yaml_path.exists():
+            return yaml_path
+        raise FileNotFoundError(f"data.yaml not found at: {yaml_path}")
+
     # Look for dataset in common locations
+    model_dir = Path(__file__).parent.parent
     possible_paths = [
-        Path(__file__).parent / "data" / "data.yaml",
-        Path(__file__).parent / "Mina-2" / "data.yaml",
-        Path(__file__).parent / "mina-2" / "data.yaml",
+        DATA_DIR / "data.yaml",
+        model_dir / "data" / "data.yaml",
+        model_dir / "Mina-2" / "data.yaml",
+        model_dir / "mina-2" / "data.yaml",
     ]
 
     for path in possible_paths:
@@ -39,16 +49,18 @@ def get_data_yaml_path() -> Path:
 
     raise FileNotFoundError(
         f"data.yaml not found. Looked in: {[str(p) for p in possible_paths]}\n"
-        "Please run the dataset download script first: python dataset/get.py"
+        "Please run the dataset download script first: uv run mina-download"
     )
 
 
 def train(
-    epochs: int = 100,
-    batch: int = 16,
-    imgsz: int = 640,
+    epochs: int = DEFAULT_EPOCHS,
+    batch: int = DEFAULT_BATCH_SIZE,
+    imgsz: int = DEFAULT_IMAGE_SIZE,
     name: str = "fish_disease",
     pretrained: str = "yolov8n.pt",
+    data_dir: Path | None = None,
+    patience: int = DEFAULT_PATIENCE,
 ) -> Path:
     """
     Train YOLOv8n model on fish disease dataset.
@@ -59,11 +71,13 @@ def train(
         imgsz: Input image size (square)
         name: Name for the training run
         pretrained: Pretrained model to start from
+        data_dir: Optional data directory
+        patience: Early stopping patience
 
     Returns:
         Path to the best model weights
     """
-    data_yaml = get_data_yaml_path()
+    data_yaml = get_data_yaml_path(data_dir)
     print(f"Using dataset config: {data_yaml}")
 
     # Load YOLOv8 nano model (optimized for mobile)
@@ -80,7 +94,7 @@ def train(
         save=True,
         save_period=-1,  # Only save best and last
         # Training optimizations
-        patience=20,  # Early stopping patience
+        patience=patience,
         workers=4,
         device="auto",  # Use GPU if available
         # Augmentation settings for better generalization
@@ -106,46 +120,3 @@ def train(
     )
 
     return best_weights
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Train YOLOv8n model for fish disease detection"
-    )
-    parser.add_argument(
-        "--epochs",
-        type=int,
-        default=100,
-        help="Number of training epochs (default: 100)",
-    )
-    parser.add_argument(
-        "--batch",
-        type=int,
-        default=16,
-        help="Batch size (default: 16)",
-    )
-    parser.add_argument(
-        "--imgsz",
-        type=int,
-        default=640,
-        help="Input image size (default: 640)",
-    )
-    parser.add_argument(
-        "--name",
-        type=str,
-        default="fish_disease",
-        help="Training run name (default: fish_disease)",
-    )
-
-    args = parser.parse_args()
-
-    train(
-        epochs=args.epochs,
-        batch=args.batch,
-        imgsz=args.imgsz,
-        name=args.name,
-    )
-
-
-if __name__ == "__main__":
-    main()

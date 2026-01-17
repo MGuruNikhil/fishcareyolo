@@ -5,19 +5,14 @@ These tests verify that training configuration is valid
 and matches the design document specifications.
 """
 
-from pathlib import Path
+import inspect
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-
-# Import the training module components
-import sys
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from train import DISEASE_CLASSES, get_data_yaml_path, train
+from mina.core.constants import DISEASE_CLASSES
+from mina.train import train
 
 
 class TestTrainingConfiguration:
@@ -115,9 +110,6 @@ class TestModelRequirements:
 
         Requirement: Use YOLOv8n for mobile performance.
         """
-        # The train function defaults to yolov8n.pt
-        import inspect
-
         sig = inspect.signature(train)
         default_model = sig.parameters["pretrained"].default
 
@@ -131,8 +123,6 @@ class TestModelRequirements:
 
         Design specifies: epochs=100, batch=16, imgsz=640
         """
-        import inspect
-
         sig = inspect.signature(train)
 
         assert sig.parameters["epochs"].default == 100

@@ -18,47 +18,20 @@ from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 from PIL import Image
 
+from mina.core.model import find_tflite_weights
+from mina.core.constants import RUNS_DIR
+
 
 # Skip tests if models aren't available
 pytestmark = pytest.mark.skipif(
-    not Path(__file__).parent.parent.joinpath("runs").exists(),
+    not RUNS_DIR.exists(),
     reason="No trained models available - run training first",
 )
-
-
-def find_model_paths() -> tuple[Path | None, Path | None]:
-    """Find the PyTorch and TFLite model paths."""
-    runs_dir = Path(__file__).parent.parent / "runs" / "detect"
-
-    if not runs_dir.exists():
-        return None, None
-
-    # Find most recent training run
-    run_dirs = sorted(runs_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
-
-    for run_dir in run_dirs:
-        pt_path = run_dir / "weights" / "best.pt"
-        # TFLite is exported alongside the pt file
-        tflite_path = pt_path.with_suffix(".tflite")
-
-        # Also check in parent directory (export sometimes puts it there)
-        alt_tflite = run_dir / "weights" / "best_saved_model" / "best_float32.tflite"
-        alt_tflite_int8 = run_dir / "weights" / "best_saved_model" / "best_int8.tflite"
-
-        if pt_path.exists():
-            for tf_path in [tflite_path, alt_tflite, alt_tflite_int8]:
-                if tf_path.exists():
-                    return pt_path, tf_path
-            # Return PT path even if TFLite not found yet
-            return pt_path, None
-
-    return None, None
 
 
 def create_test_image(width: int, height: int, seed: int) -> np.ndarray:
     """Create a random test image with the given dimensions."""
     rng = np.random.default_rng(seed)
-    # Create RGB image with realistic pixel values
     return rng.integers(0, 256, (height, width, 3), dtype=np.uint8)
 
 
@@ -81,17 +54,17 @@ class TestTFLiteExportEquivalence:
     def setup(self, tmp_path):
         """Set up test fixtures."""
         self.tmp_path = tmp_path
-        self.pt_path, self.tflite_path = find_model_paths()
+        self.pt_path, self.tflite_path = find_tflite_weights()
 
     def test_models_exist(self):
         """Verify that both PyTorch and TFLite models exist."""
         assert self.pt_path is not None, "PyTorch model not found"
         assert self.tflite_path is not None, (
-            "TFLite model not found. Run: python export_model.py"
+            "TFLite model not found. Run: uv run mina-export"
         )
 
     @pytest.mark.skipif(
-        find_model_paths()[1] is None, reason="TFLite model not exported yet"
+        find_tflite_weights()[1] is None, reason="TFLite model not exported yet"
     )
     @settings(max_examples=100, deadline=None)
     @given(
@@ -143,11 +116,10 @@ class TestTFLiteExportEquivalence:
                 detection = {
                     "class_id": int(boxes.cls[i].item()),
                     "confidence": float(boxes.conf[i].item()),
-                    "bbox": boxes.xyxyn[i].tolist(),  # Normalized coordinates
+                    "bbox": boxes.xyxyn[i].tolist(),
                 }
                 detections.append(detection)
 
-        # Sort by confidence for consistent comparison
         return sorted(detections, key=lambda d: -d["confidence"])
 
     def _assert_equivalent_detections(
@@ -156,21 +128,13 @@ class TestTFLiteExportEquivalence:
         tflite_detections: list[dict],
     ) -> None:
         """Assert that two detection lists are equivalent within tolerance."""
-        # Both should have same number of detections (after NMS)
-        # Note: There might be small differences due to quantization
-        # so we compare the top detections
-
-        # If PT model finds nothing, TFLite should too (or vice versa)
         if len(pt_detections) == 0 and len(tflite_detections) == 0:
-            return  # Both empty is valid
+            return
 
-        # Compare top detections if both have results
         if len(pt_detections) > 0 and len(tflite_detections) > 0:
-            # Check that top detection classes match
             pt_top_class = pt_detections[0]["class_id"]
             tflite_top_class = tflite_detections[0]["class_id"]
 
-            # If confidences are very low, classes might differ due to noise
             pt_top_conf = pt_detections[0]["confidence"]
             tflite_top_conf = tflite_detections[0]["confidence"]
 
@@ -180,7 +144,6 @@ class TestTFLiteExportEquivalence:
                     f"TFLite={tflite_top_class}"
                 )
 
-            # Check confidence scores are within tolerance
             conf_diff = abs(pt_top_conf - tflite_top_conf)
             assert conf_diff <= self.CONFIDENCE_TOLERANCE, (
                 f"Confidence difference {conf_diff:.4f} exceeds tolerance "
@@ -196,10 +159,10 @@ class TestModelOutputFormat:
     def setup(self, tmp_path):
         """Set up test fixtures."""
         self.tmp_path = tmp_path
-        self.pt_path, _ = find_model_paths()
+        self.pt_path, _ = find_tflite_weights()
 
     @pytest.mark.skipif(
-        find_model_paths()[0] is None, reason="No trained model available"
+        find_tflite_weights()[0] is None, reason="No trained model available"
     )
     def test_output_format_matches_detection_structure(self):
         """
@@ -230,17 +193,13 @@ class TestModelOutputFormat:
             if boxes is None or len(boxes) == 0:
                 continue
 
-            # Check each detection
             for i in range(len(boxes)):
-                # Class ID should be valid
                 class_id = int(boxes.cls[i].item())
                 assert 0 <= class_id < 5, f"Invalid class ID: {class_id}"
 
-                # Confidence should be 0-1
                 confidence = float(boxes.conf[i].item())
                 assert 0.0 <= confidence <= 1.0, f"Invalid confidence: {confidence}"
 
-                # Bounding box should be normalized
                 bbox = boxes.xyxyn[i].tolist()
                 assert len(bbox) == 4, f"Invalid bbox length: {len(bbox)}"
 

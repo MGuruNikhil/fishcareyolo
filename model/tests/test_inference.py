@@ -9,23 +9,13 @@ Feature: fish-disease-detection, Property 5: Detection result structure
 
 from pathlib import Path
 
-import numpy as np
 import pytest
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
-from PIL import Image
 
-import sys
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from test_inference import (
-    DISEASE_CLASSES,
-    BoundingBox,
-    Detection,
-    convert_to_detections,
-    validate_detection,
-)
+from mina.core.constants import DISEASE_CLASSES
+from mina.core.types import BoundingBox, Detection
+from mina.inference import convert_to_detections
 
 
 # Strategies for generating test data
@@ -73,7 +63,7 @@ class TestDetectionStructure:
             bounding_box=BoundingBox(x=x, y=y, width=width, height=height),
         )
 
-        errors = validate_detection(detection)
+        errors = detection.validate()
         assert len(errors) == 0, f"Unexpected validation errors: {errors}"
 
     @given(confidence=st.floats(min_value=1.01, max_value=10.0))
@@ -91,7 +81,7 @@ class TestDetectionStructure:
             bounding_box=BoundingBox(x=0.1, y=0.1, width=0.2, height=0.2),
         )
 
-        errors = validate_detection(detection)
+        errors = detection.validate()
         assert len(errors) > 0, "Expected validation error for high confidence"
         assert any("confidence" in e.lower() for e in errors)
 
@@ -108,7 +98,7 @@ class TestDetectionStructure:
             bounding_box=BoundingBox(x=0.1, y=0.1, width=0.2, height=0.2),
         )
 
-        errors = validate_detection(detection)
+        errors = detection.validate()
         assert len(errors) > 0, "Expected validation error for invalid class"
         assert any("class" in e.lower() for e in errors)
 
@@ -129,7 +119,7 @@ class TestDetectionStructure:
             bounding_box=BoundingBox(x=x, y=0.1, width=0.2, height=0.2),
         )
 
-        errors = validate_detection(detection)
+        errors = detection.validate()
         assert len(errors) > 0, "Expected validation error for negative x"
 
 

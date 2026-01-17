@@ -2,7 +2,6 @@
 Pytest configuration and shared fixtures for model tests.
 """
 
-import tempfile
 from pathlib import Path
 
 import numpy as np

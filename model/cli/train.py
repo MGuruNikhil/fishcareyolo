@@ -1,0 +1,54 @@
+"""
+CLI for training the fish disease detection model.
+
+Usage:
+    uv run mina-train [--epochs N] [--batch N] [--imgsz N] [--name NAME]
+"""
+
+import argparse
+
+from mina.train import train
+from mina.core.constants import DEFAULT_EPOCHS, DEFAULT_BATCH_SIZE, DEFAULT_IMAGE_SIZE
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Train YOLOv8n model for fish disease detection"
+    )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=DEFAULT_EPOCHS,
+        help=f"Number of training epochs (default: {DEFAULT_EPOCHS})",
+    )
+    parser.add_argument(
+        "--batch",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help=f"Batch size (default: {DEFAULT_BATCH_SIZE})",
+    )
+    parser.add_argument(
+        "--imgsz",
+        type=int,
+        default=DEFAULT_IMAGE_SIZE,
+        help=f"Input image size (default: {DEFAULT_IMAGE_SIZE})",
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        default="fish_disease",
+        help="Training run name (default: fish_disease)",
+    )
+
+    args = parser.parse_args()
+
+    train(
+        epochs=args.epochs,
+        batch=args.batch,
+        imgsz=args.imgsz,
+        name=args.name,
+    )
+
+
+if __name__ == "__main__":
+    main()
