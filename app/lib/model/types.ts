@@ -188,3 +188,85 @@ export function validateDiseaseInfo(info: DiseaseInfo): string[] {
         errors.push(`Invalid severity: ${info.severity}`)
     return errors
 }
+
+// Serialization
+export interface SerializedSession {
+    id: string
+    imageUri: string
+    detections: SerializedDetection[]
+    timestamp: number
+}
+
+export interface SerializedDetection {
+    id: string
+    diseaseClass: string
+    confidence: number
+    boundingBox: BoundingBox
+}
+
+export function serializeSession(session: DetectionSession): string {
+    const serialized: SerializedSession = {
+        id: session.id,
+        imageUri: session.imageUri,
+        detections: session.detections.map((det) => ({
+            id: det.id,
+            diseaseClass: det.diseaseClass,
+            confidence: det.confidence,
+            boundingBox: det.boundingBox,
+        })),
+        timestamp: session.timestamp,
+    }
+    return JSON.stringify(serialized)
+}
+
+export function parseSession(json: string): DetectionSession | null {
+    try {
+        const parsed = JSON.parse(json)
+        if (
+            typeof parsed !== "object" ||
+            parsed === null ||
+            !parsed.id ||
+            !parsed.imageUri ||
+            !Array.isArray(parsed.detections) ||
+            typeof parsed.timestamp !== "number"
+        ) {
+            return null
+        }
+        const detections: Detection[] = []
+        for (const det of parsed.detections) {
+            if (
+                !det.id ||
+                !det.diseaseClass ||
+                typeof det.confidence !== "number" ||
+                !det.boundingBox ||
+                typeof det.boundingBox.x !== "number" ||
+                typeof det.boundingBox.y !== "number" ||
+                typeof det.boundingBox.width !== "number" ||
+                typeof det.boundingBox.height !== "number"
+            ) {
+                continue
+            }
+            if (!isValidDiseaseClass(det.diseaseClass) || !isValidConfidence(det.confidence)) {
+                continue
+            }
+            const bbox = det.boundingBox
+            if (!isValidBoundingBox(bbox)) {
+                continue
+            }
+            detections.push({
+                id: det.id,
+                diseaseClass: det.diseaseClass as DiseaseClass,
+                confidence: det.confidence,
+                boundingBox: bbox,
+            })
+        }
+        return {
+            id: parsed.id,
+            imageUri: parsed.imageUri,
+            detections,
+            timestamp: parsed.timestamp,
+        }
+    } catch {
+        return null
+    }
+}

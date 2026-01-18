@@ -39,11 +39,11 @@
   - [x] 2.3 Write property test for detection structure validation
     - **Property 5: Detection result structure**
     - **Validates: Requirements 4.2**
-  - [ ] 2.4 Create JSON serialization and parsing functions for DetectionSession
+  - [x] 2.4 Create JSON serialization and parsing functions for DetectionSession
     - Implement serializeSession and parseSession functions
     - Handle edge cases for malformed JSON
     - _Requirements: 4.4, 4.5_
-  - [ ] 2.5 Write property test for serialization round-trip
+  - [x] 2.5 Write property test for serialization round-trip
     - **Property 1: Detection session round-trip**
     - **Validates: Requirements 4.4, 4.5**
 

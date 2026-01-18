@@ -34,6 +34,9 @@ export {
 // Disease classes constant
 export { DISEASE_CLASSES } from "@/lib/model/types"
 
+// Serialization functions
+export { parseSession, serializeSession } from "@/lib/model/types"
+
 // Manager functions
 export {
     checkForUpdate,
