@@ -1,5 +1,7 @@
 # MINA
 
+<img src="app/assets/images/favicon.png" width="100" /> 
+
 > Offline-first, on-device fish disease detection for mobile.
 
 MINA is a React Native (Expo) app that uses a YOLOv8 model (exported to TFLite) to detect common fish diseases from a camera capture or gallery image. The goal is **instant, private, offline** detection with clear results + recommended next actions.
@@ -102,3 +104,4 @@ Expo app tests use `bun:test` for correctness properties:
 
 This project provides informational guidance only and is not a substitute for veterinary advice. When in doubt, consult a qualified aquatic veterinarian.
 
+App icon based on Twemoji. Licensed under CC-BY 4.0.
