@@ -48,7 +48,7 @@ As a fish owner, I want to see detection results displayed clearly, so that I ca
 As a fish owner, I want accurate disease detection, so that I can trust the results and take appropriate action.
 
 #### Acceptance Criteria
-1. WHEN the On_Device_Model performs Inference THEN the On_Device_Model SHALL identify common fish diseases including fin rot, ich, fungal infection, and bacterial infection
+1. WHEN the On_Device_Model performs Inference THEN the On_Device_Model SHALL identify common fish diseases including bacterial infection, fungal infection, parasite, and white tail
 2. WHEN the On_Device_Model completes Inference THEN the On_Device_Model SHALL produce Detection_Results containing Disease_Class, Confidence_Score, and Bounding_Box coordinates for each detection
 3. WHEN the Confidence_Score is below 0.3 THEN the On_Device_Model SHALL exclude that detection from the results
 4. WHEN serializing Detection_Results for storage THEN the mina SHALL encode them as JSON with consistent field names

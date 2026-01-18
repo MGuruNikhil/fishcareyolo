@@ -7,7 +7,7 @@
     - _Design: Training Pipeline_
   - [x] 1.2 Prepare fish disease dataset
     - Create data directory structure (images/train, images/val, labels/train, labels/val)
-    - Create data.yaml config file with disease classes (fin_rot, ich, fungal_infection, bacterial_infection, healthy)
+    - Create data.yaml config file with disease classes (bacterial_infection, fungal_infection, healthy, parasite, white_tail)
     - _Design: Training Pipeline_
   - [x] 1.3 Train YOLOv8 model on fish disease data
     - Train YOLOv8n (nano) model for mobile performance
@@ -83,7 +83,7 @@
 - [ ] 6. Create disease info data
   - [ ] 6.1 Create DiseaseInfo entries for all disease classes
     - Include displayName, description, symptoms, treatments, severity for each
-    - Cover: fin_rot, ich, fungal_infection, bacterial_infection, healthy
+    - Cover: bacterial_infection, fungal_infection, healthy, parasite, white_tail
     - _Requirements: 6.1, 6.2_
   - [ ] 6.2 Write property test for disease info completeness
     - **Property 6: Disease info completeness**

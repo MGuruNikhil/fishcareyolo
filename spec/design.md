@@ -218,11 +218,11 @@ A single disease detection from the model
 
 ```typescript
 type DiseaseClass = 
-  | "fin_rot"
-  | "ich"
-  | "fungal_infection"
   | "bacterial_infection"
+  | "fungal_infection"
   | "healthy"
+  | "parasite"
+  | "white_tail"
 
 type Detection = {
   id: string
