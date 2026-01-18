@@ -1,11 +1,12 @@
 import "@/global.css"
 
+import { ModelProvider } from "@/lib/model"
 import { NAV_THEME } from "@/lib/theme"
+import { ThemeProvider, useTheme } from "@/lib/theme-context"
 import { ThemeProvider as NavThemeProvider } from "@react-navigation/native"
 import { PortalHost } from "@rn-primitives/portal"
 import { Stack } from "expo-router"
 import { StatusBar } from "expo-status-bar"
-import { ThemeProvider, useTheme } from "@/lib/theme-context"
 
 export { ErrorBoundary } from "expo-router"
 
@@ -24,7 +25,9 @@ function RootLayoutContent() {
 export default function RootLayout() {
     return (
         <ThemeProvider>
-            <RootLayoutContent />
+            <ModelProvider>
+                <RootLayoutContent />
+            </ModelProvider>
         </ThemeProvider>
     )
 }
