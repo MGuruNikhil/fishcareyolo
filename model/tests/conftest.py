@@ -2,8 +2,6 @@
 Pytest configuration and shared fixtures for model tests.
 """
 
-from pathlib import Path
-
 import numpy as np
 import pytest
 from PIL import Image

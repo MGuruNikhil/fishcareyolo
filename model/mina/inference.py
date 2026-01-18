@@ -162,7 +162,7 @@ def run_inference_on_directory(
         all_detections.extend(detections)
 
     if verbose:
-        print(f"\n=== Summary ===")
+        print("\n=== Summary ===")
         print(f"Processed: {len(images_to_process)} images")
         print(f"Total detections: {len(all_detections)}")
 

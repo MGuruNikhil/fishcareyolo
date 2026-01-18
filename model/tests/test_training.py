@@ -7,7 +7,6 @@ and matches the design document specifications.
 
 import inspect
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

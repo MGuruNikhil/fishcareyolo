@@ -8,7 +8,7 @@ from pathlib import Path
 
 from roboflow import Roboflow
 
-from mina.core.constants import DISEASE_CLASSES, DATA_DIR, TEST_DATA_DIR, MODEL_DIR
+from mina.core.constants import DISEASE_CLASSES, DATA_DIR, TEST_DATA_DIR
 from mina.core.dataset import create_data_yaml
 
 
@@ -107,7 +107,7 @@ def organize_dataset(
     val_count = len(list((target_dir / "images" / "val").glob("*")))
     test_count = len(list((test_dir / "images").glob("*")))
 
-    print(f"\nDataset organized successfully!")
+    print("\nDataset organized successfully!")
     print(f"  Training images: {train_count}")
     print(f"  Validation images: {val_count}")
     print(f"  Test images: {test_count} (in {test_dir})")
@@ -177,4 +177,4 @@ def download_and_organize(
 
     # Clean up original download
     shutil.rmtree(source_dir)
-    print(f"\nCleaned up temporary download directory")
+    print("\nCleaned up temporary download directory")

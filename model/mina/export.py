@@ -67,7 +67,7 @@ def export_tflite(
 
     # Print model size
     size_mb = export_path.stat().st_size / (1024 * 1024)
-    print(f"\nExport complete!")
+    print("\nExport complete!")
     print(f"TFLite model saved to: {export_path}")
     print(f"Model size: {size_mb:.2f} MB")
 

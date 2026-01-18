@@ -128,7 +128,7 @@ def train(
 
     # Get path to best weights
     best_weights = Path(results.save_dir) / "weights" / "best.pt"
-    print(f"\nTraining complete!")
+    print("\nTraining complete!")
     print(f"Best weights saved to: {best_weights}")
     print(f"Validation mAP50: {results.results_dict.get('metrics/mAP50(B)', 'N/A')}")
     print(

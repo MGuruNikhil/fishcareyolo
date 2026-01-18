@@ -7,15 +7,11 @@ as specified in the design document.
 Feature: fish-disease-detection, Property 5: Detection result structure
 """
 
-from pathlib import Path
-
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from mina.core.constants import DISEASE_CLASSES
 from mina.core.types import BoundingBox, Detection
-from mina.inference import convert_to_detections
 
 
 # Strategies for generating test data
