@@ -83,11 +83,11 @@ train: images/train
 val: images/val
 
 names:
-  0: fin_rot
-  1: ich
-  2: fungal_infection
-  3: bacterial_infection
-  4: healthy
+  0: bacterial_infection
+  1: fungal_infection
+  2: healthy
+  3: parasite
+  4: white_tail
 ```
 
 ### Training Script
