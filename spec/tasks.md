@@ -87,7 +87,7 @@
     - **Property 9: NMS deduplication**
     - **Validates: Requirements 2.1, 2.2_
 
-- [ ] 5. Checkpoint
+- [x] 5. Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Create disease info data
