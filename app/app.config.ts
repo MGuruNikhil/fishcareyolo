@@ -2,7 +2,7 @@ import type { ExpoConfig, ConfigContext } from "expo/config"
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
-    name: "Mina",
+    name: "mina",
     slug: "mina",
     version: "1.0.0",
     orientation: "portrait",
