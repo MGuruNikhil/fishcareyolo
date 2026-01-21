@@ -1,40 +1,12 @@
-import { Link, Stack } from "expo-router"
-import { FishIcon, MoonStarIcon, StarIcon, SunIcon } from "lucide-react-native"
+import { MoonStarIcon, SunIcon } from "lucide-react-native"
 import * as React from "react"
-import { View } from "react-native"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
-import { Text } from "@/components/ui/text"
 import { useTheme } from "@/lib/theme"
-
-const SCREEN_OPTIONS = {
-    title: "mina",
-    headerTransparent: true,
-    headerRight: () => <ThemeToggle />,
-}
+import RootNavigator from "./navigation/RootNavigation"
 
 export default function Screen() {
-    const { colorScheme } = useTheme()
-
-    return (
-        <>
-            <Stack.Screen options={SCREEN_OPTIONS} />
-            <View className="flex-1 items-center justify-center gap-8 p-4">
-                <View className="flex-row items-center gap-4">
-                    <Icon as={FishIcon} className="h-16 w-12" />
-                </View>
-                <View className="gap-2 p-4">
-                    <Text className="ios:text-foreground font-mono text-sm text-muted-foreground">
-                        1. Edit <Text variant="code">app/index.tsx</Text> to get
-                        started.
-                    </Text>
-                    <Text className="ios:text-foreground font-mono text-sm text-muted-foreground">
-                        2. Save to see your changes instantly.
-                    </Text>
-                </View>
-            </View>
-        </>
-    )
+    return <RootNavigator />
 }
 
 const THEME_ICONS = {

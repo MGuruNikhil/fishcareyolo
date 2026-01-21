@@ -15,7 +15,7 @@ function RootLayoutContent() {
     return (
         <NavThemeProvider value={NAV_THEME[colorScheme]}>
             <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-            <Stack />
+            <Stack screenOptions={{ headerShown: false }} />
             <PortalHost />
         </NavThemeProvider>
     )

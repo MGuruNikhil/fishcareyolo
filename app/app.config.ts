@@ -19,6 +19,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ios: {
         supportsTablet: true,
         bundleIdentifier: "com.mina.app",
+        infoPlist: {
+            NSCameraUsageDescription: "This app uses the camera to detect and identify fish species.",
+            NSMicrophoneUsageDescription: "This app may use the microphone for video recording."
+        }
     },
     android: {
         edgeToEdgeEnabled: true,
@@ -27,13 +31,25 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
             backgroundColor: "#673ab7",
         },
         package: "com.mina.app",
+        permissions: [
+            "CAMERA",
+            "RECORD_AUDIO"
+        ]
     },
     web: {
         bundler: "metro",
         output: "static",
         favicon: "./assets/images/favicon.png",
     },
-    plugins: ["expo-router"],
+    plugins: [
+        "expo-router",
+        [
+            "expo-camera",
+            {
+                "cameraPermission": "Allow mina to access your camera to detect and identify fish species."
+            }
+        ]
+    ],
     experiments: {
         typedRoutes: true,
     },
