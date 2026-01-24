@@ -2,7 +2,7 @@
  * Local storage utilities for model files and metadata.
  */
 
-import * as FileSystem from "expo-file-system"
+import * as FileSystem from "expo-file-system/legacy"
 import type { ModelChannel, ModelMetadata } from "@/lib/model/types"
 
 const STORAGE_KEYS = {

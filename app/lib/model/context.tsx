@@ -16,8 +16,8 @@ import {
     forceUpdateModel,
     getLocalModelPath,
     initializeModel,
-    type ModelState,
-} from "@/lib/model"
+} from "@/lib/model/manager"
+import type { ModelState } from "@/lib/model/types"
 
 interface ModelContextValue extends ModelState {
     /** Re-download the model from scratch */

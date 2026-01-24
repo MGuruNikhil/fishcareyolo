@@ -92,6 +92,10 @@ export function FlatTabBar({
                         route.name === "history" ||
                         route.name === "settings",
                 )
+                .sort((a, b) => {
+                    const order = ["history", "index", "settings"]
+                    return order.indexOf(a.name) - order.indexOf(b.name)
+                })
                 .map((route, index) => {
                     const { options } = descriptors[route.key]
                     const label =

@@ -1,5 +1,6 @@
 import { useIsFocused } from "@react-navigation/native"
 import { CameraView, useCameraPermissions } from "expo-camera"
+import * as ImagePicker from "expo-image-picker"
 import { ImageIcon, RefreshCcwIcon } from "lucide-react-native"
 import * as React from "react"
 import {
@@ -12,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Text } from "@/components/ui/text"
+import { useCamera } from "@/lib/camera"
 
 export default function HomeCameraScreen() {
     const cameraRef = React.useRef<CameraView>(null)
@@ -22,7 +24,8 @@ export default function HomeCameraScreen() {
     const [lastCaptureUri, setLastCaptureUri] = React.useState<string | null>(
         null,
     )
-    const [facing, setFacing] = React.useState<"back" | "front">("back")
+    const [isGalleryLoading, setIsGalleryLoading] = React.useState(false)
+    const { cameraFacing, setCameraFacing } = useCamera()
 
     const canShowCamera = permission?.granted && isFocused
 
@@ -116,19 +119,46 @@ export default function HomeCameraScreen() {
     }
 
     return (
-        <View className="flex-1 bg-black">
+        <View className="flex-1">
             <CameraView
                 ref={cameraRef}
+                style={{ flex: 1 }}
                 className="absolute inset-0"
-                facing={facing}
+                facing={cameraFacing}
                 mode="picture"
                 ratio={ratio}
             />
 
-            <View className="absolute inset-x-0 bottom-0 items-center bg-transparent px-6 pb-24 pt-6">
+            <View className="absolute inset-x-0 bottom-0 items-center bg-transparent px-10 pb-6 pt-6">
                 <View className="flex-row items-center justify-between self-stretch">
-                    <Pressable className="h-12 w-12 items-center justify-center rounded-full bg-black/20">
-                        <Icon as={ImageIcon} size={20} className="text-white" />
+                    <Pressable
+                        className="h-12 w-12 items-center justify-center rounded-full bg-black/20"
+                        onPress={async () => {
+                            if (isGalleryLoading) return
+                            setIsGalleryLoading(true)
+                            try {
+                                const result =
+                                    await ImagePicker.launchImageLibraryAsync({
+                                        mediaTypes: ["images"],
+                                        quality: 0.85,
+                                        base64: false,
+                                    })
+                                if (!result.canceled && result.assets[0]) {
+                                    setLastCaptureUri(result.assets[0].uri)
+                                }
+                            } catch (err) {
+                                console.warn("gallery launch failed", err)
+                            } finally {
+                                setIsGalleryLoading(false)
+                            }
+                        }}
+                        disabled={isGalleryLoading}
+                    >
+                        <Icon
+                            as={ImageIcon}
+                            size={20}
+                            className={`${isGalleryLoading ? "text-white/50" : "text-white"}`}
+                        />
                     </Pressable>
 
                     <Pressable
@@ -141,7 +171,9 @@ export default function HomeCameraScreen() {
                     <Pressable
                         className="h-12 w-12 items-center justify-center rounded-full bg-black/20"
                         onPress={() =>
-                            setFacing((v) => (v === "back" ? "front" : "back"))
+                            setCameraFacing(
+                                cameraFacing === "back" ? "front" : "back",
+                            )
                         }
                     >
                         <Icon

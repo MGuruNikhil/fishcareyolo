@@ -6,6 +6,7 @@ import { Tabs } from "expo-router"
 import { FlatTabBar } from "@/components/ui/flat-tab-bar"
 import { StatusBar } from "expo-status-bar"
 import { CameraProvider } from "@/lib/camera"
+import { useDefaultTab } from "@/lib/default-tab"
 import { ModelProvider } from "@/lib/model"
 import { NAV_THEME, ThemeProvider, useTheme } from "@/lib/theme"
 
@@ -13,6 +14,7 @@ export { ErrorBoundary } from "expo-router"
 
 function RootLayoutContent() {
     const { colorScheme } = useTheme()
+    useDefaultTab()
 
     return (
         <NavThemeProvider value={NAV_THEME[colorScheme]}>
@@ -21,11 +23,10 @@ function RootLayoutContent() {
                 screenOptions={{ headerShown: false }}
                 tabBar={(props) => <FlatTabBar {...props} />}
             >
-                <Tabs.Screen name="index" options={{ title: "Home" }} />
                 <Tabs.Screen name="history" options={{ title: "History" }} />
+                <Tabs.Screen name="index" options={{ title: "Home" }} />
                 <Tabs.Screen name="settings" options={{ title: "Settings" }} />
                 <Tabs.Screen name="+not-found" options={{ href: null }} />
-                <Tabs.Screen name="+html" options={{ href: null }} />
             </Tabs>
             <PortalHost />
         </NavThemeProvider>
