@@ -1,12 +1,11 @@
-// src/navigation/BottomTabs.tsx
 import React from "react"
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { House, FileText, Settings as SettingsIcon } from "lucide-react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import HomeStack from "./HomeStack"
-import History from "../screens/history/History"
-import Settings from "../screens/settings/Settings"
-import { BottomTabsList } from "./BottomTabsList.types"
+import HomeStack from "@/app/navigation/HomeStack"
+import History from "@/app/screens/history/history"
+import Settings from "@/app/screens/settings/settings"
+import { BottomTabsList } from "@/app/navigation/BottomTabsList.types"
 
 const Tab = createBottomTabNavigator<BottomTabsList>()
 

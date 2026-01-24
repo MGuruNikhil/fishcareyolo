@@ -1,6 +1,6 @@
 import React from "react"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import Cam from "../screens/home/Cam"
+import Cam from "@/app/screens/home/cam"
 
 const Stack = createNativeStackNavigator()
 
