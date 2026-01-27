@@ -60,7 +60,10 @@ export default function PreviewScreen() {
                 <Button
                     className="flex-1 h-12"
                     onPress={() => {
-                        console.log("Analyze image:", imageUri)
+                        router.push({
+                            pathname: "/results",
+                            params: { imageUri },
+                        })
                     }}
                 >
                     <Text>Analyze Fish</Text>

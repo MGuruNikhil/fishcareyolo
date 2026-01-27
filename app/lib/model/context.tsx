@@ -115,7 +115,7 @@ export function ModelProvider({ children }: { children: ReactNode }) {
                 return null
             }
         },
-        [state.isReady, state.error]
+        [state.isReady, state.error],
     )
 
     return (

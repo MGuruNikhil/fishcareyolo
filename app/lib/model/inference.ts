@@ -5,7 +5,10 @@
  * Non-Maximum Suppression (NMS) to filter overlapping detections.
  */
 
-import { loadTensorflowModel, type TensorflowModel } from "react-native-fast-tflite"
+import {
+    loadTensorflowModel,
+    type TensorflowModel,
+} from "react-native-fast-tflite"
 import * as ImageManipulator from "expo-image-manipulator"
 import * as FileSystem from "expo-file-system"
 import { DISEASE_CLASSES } from "@/lib/model/types"
@@ -248,17 +251,17 @@ export function disposeModel(): void {
 
 /**
  * Preprocess image for model input.
- * 
+ *
  * NOTE: This is a simplified implementation. For production use, we need proper
  * image decoding to RGB tensor. Options:
  * 1. Use vision-camera-resize-plugin with VisionCamera integration
  * 2. Create native module for image decoding
  * 3. Use expo-gl or react-native-skia for pixel access
- * 
+ *
  * For now, we create a placeholder tensor that simulates the expected input format.
  * This allows the rest of the inference pipeline to be tested.
  *
- * @param imageUri - URI to the image file  
+ * @param imageUri - URI to the image file
  * @returns Placeholder RGB tensor (640x640x3)
  */
 async function preprocessImage(imageUri: string): Promise<Uint8Array> {
@@ -270,7 +273,7 @@ async function preprocessImage(imageUri: string): Promise<Uint8Array> {
             {
                 compress: 0.9,
                 format: ImageManipulator.SaveFormat.JPEG,
-            }
+            },
         )
 
         // TODO: Decode image to RGB pixel data
@@ -278,7 +281,7 @@ async function preprocessImage(imageUri: string): Promise<Uint8Array> {
         // This won't produce meaningful results but allows testing the pipeline
         const tensorSize = IMAGE_SIZE * IMAGE_SIZE * 3
         const tensor = new Uint8Array(tensorSize)
-        
+
         // Fill with gray color (128, 128, 128) for testing
         for (let i = 0; i < tensorSize; i++) {
             tensor[i] = 128
@@ -286,8 +289,8 @@ async function preprocessImage(imageUri: string): Promise<Uint8Array> {
 
         console.warn(
             "WARNING: Using placeholder image tensor. " +
-            "Proper image decoding not yet implemented. " +
-            "Results will not be meaningful until image preprocessing is completed."
+                "Proper image decoding not yet implemented. " +
+                "Results will not be meaningful until image preprocessing is completed.",
         )
 
         return tensor
@@ -306,7 +309,7 @@ async function preprocessImage(imageUri: string): Promise<Uint8Array> {
  */
 export async function runInference(
     imageUri: string,
-    modelPath: string
+    modelPath: string,
 ): Promise<InferenceResult> {
     const startTime = Date.now()
 
@@ -323,7 +326,11 @@ export async function runInference(
         // Step 4: Parse YOLO output
         // The model outputs raw detections in YOLO format
         const rawOutput = outputs[0] as Float32Array
-        const rawDetections = parseYolov8Output(rawOutput, IMAGE_SIZE, IMAGE_SIZE)
+        const rawDetections = parseYolov8Output(
+            rawOutput,
+            IMAGE_SIZE,
+            IMAGE_SIZE,
+        )
 
         // Step 5: Apply NMS to remove overlapping boxes
         const nmsDetections = applyNMS(rawDetections, IOU_THRESHOLD)
@@ -331,7 +338,7 @@ export async function runInference(
         // Step 6: Filter by confidence threshold
         const filteredDetections = filterByConfidence(
             nmsDetections,
-            CONFIDENCE_THRESHOLD
+            CONFIDENCE_THRESHOLD,
         )
 
         // Step 7: Sort by confidence (descending)
@@ -341,7 +348,7 @@ export async function runInference(
         const detections = convertToDetections(
             sortedDetections,
             IMAGE_SIZE,
-            IMAGE_SIZE
+            IMAGE_SIZE,
         )
 
         const inferenceTimeMs = Date.now() - startTime
