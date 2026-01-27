@@ -78,5 +78,13 @@ export {
     type InferenceResult,
 } from "@/lib/model/inference"
 
+// Disease information
+export {
+    DISEASE_INFO,
+    getAllDiseaseInfo,
+    getBoundingBoxColor,
+    getDiseaseInfo,
+} from "@/lib/model/disease-info"
+
 // React context
 export { ModelProvider, useModel } from "@/lib/model/context"

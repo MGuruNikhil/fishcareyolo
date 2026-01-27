@@ -90,18 +90,18 @@
 - [x] 5. Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Create disease info data
-  - [ ] 6.1 Create DiseaseInfo entries for all disease classes
+- [x] 6. Create disease info data
+  - [x] 6.1 Create DiseaseInfo entries for all disease classes
     - Include displayName, description, symptoms, treatments, severity for each
     - Cover: bacterial_infection, fungal_infection, healthy, parasite, white_tail
     - _Requirements: 6.1, 6.2_
-  - [ ] 6.2 Write property test for disease info completeness
+  - [x] 6.2 Write property test for disease info completeness
     - **Property 6: Disease info completeness**
     - **Validates: Requirements 6.1, 6.2**
-  - [ ] 6.3 Create bounding box color mapping function
+  - [x] 6.3 Create bounding box color mapping function
     - Map diseaseClass to color (green=healthy, yellow=low severity, red=medium/high)
     - _Requirements: 8.3_
-  - [ ] 6.4 Write property test for bounding box color mapping
+  - [x] 6.4 Write property test for bounding box color mapping
     - **Property 7: Bounding box color mapping**
     - **Validates: Requirements 8.3**
 
