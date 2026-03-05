@@ -122,31 +122,39 @@ export function parseYolov8Output(
 ): RawDetection[] {
     const detections: RawDetection[] = []
 
-    const numAnchors = output.length / (4 + 1 + DISEASE_CLASSES.length)
+    const numClasses = DISEASE_CLASSES.length
+    const numAttributes = 4 + numClasses // cx, cy, w, h, class1..classN (no objectness in YOLOv8)
+    const numAnchors = output.length / numAttributes
 
+    // YOLOv8 output is transposed: shape [numAttributes, numAnchors]
+    // Row 0 = cx for all anchors, Row 1 = cy, Row 2 = w, Row 3 = h,
+    // Rows 4..4+numClasses = class scores for all anchors
     for (let i = 0; i < numAnchors; i++) {
-        const baseOffset = i * (4 + 1 + DISEASE_CLASSES.length)
+        const cx = output[0 * numAnchors + i] / inputWidth
+        const cy = output[1 * numAnchors + i] / inputHeight
+        const w = output[2 * numAnchors + i] / inputWidth
+        const h = output[3 * numAnchors + i] / inputHeight
 
-        const cx = output[baseOffset + 0] / inputWidth
-        const cy = output[baseOffset + 1] / inputHeight
-        const w = output[baseOffset + 2] / inputWidth
-        const h = output[baseOffset + 3] / inputHeight
-        const objectness = output[baseOffset + 4]
+        // Find best class score (YOLOv8 has no objectness — class score IS the confidence)
+        let bestClassIndex = 0
+        let bestScore = -1
 
-        for (let c = 0; c < DISEASE_CLASSES.length; c++) {
-            const classOffset = baseOffset + 5 + c
-            const classProb = output[classOffset]
-            const confidence = objectness * classProb
-
-            if (confidence >= CONFIDENCE_THRESHOLD) {
-                const bbox = cxcywhToBoundingBox(cx, cy, w, h)
-
-                detections.push({
-                    classIndex: c,
-                    confidence,
-                    boundingBox: bbox,
-                })
+        for (let c = 0; c < numClasses; c++) {
+            const score = output[(4 + c) * numAnchors + i]
+            if (score > bestScore) {
+                bestScore = score
+                bestClassIndex = c
             }
+        }
+
+        if (bestScore >= CONFIDENCE_THRESHOLD) {
+            const bbox = cxcywhToBoundingBox(cx, cy, w, h)
+
+            detections.push({
+                classIndex: bestClassIndex,
+                confidence: bestScore,
+                boundingBox: bbox,
+            })
         }
     }
 
