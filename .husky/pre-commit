@@ -1,8 +1,0 @@
-cd app
-bun fix
-bun tsc --noEmit
-cd ../model
-uvx ruff check
-uvx ruff format
-cd ..
-git add .
