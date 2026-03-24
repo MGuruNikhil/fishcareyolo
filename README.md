@@ -1,6 +1,6 @@
 # MINA
 
-<img src="app/assets/images/favicon.png" width="100" /> 
+<img src="web/app/public/favicon.png" width="100" /> 
 
 > Offline-first, on-device fish disease detection for mobile.
 
