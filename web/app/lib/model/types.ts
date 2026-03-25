@@ -20,6 +20,9 @@ export const DISEASE_CLASSES: DiseaseClass[] = [
     "white_tail",
 ]
 
+/** Disease severity levels (healthy is a severity, not a disease with severity) */
+export type Severity = "healthy" | "low" | "medium" | "high"
+
 /** Bounding box coordinates (normalized 0-1 relative to image dimensions) */
 export interface BoundingBox {
     x: number
@@ -40,6 +43,16 @@ export interface Detection {
 export interface InferenceResult {
     detections: Detection[]
     inferenceTimeMs: number
+}
+
+/** Disease information with symptoms and treatments */
+export interface DiseaseInfo {
+    diseaseClass: DiseaseClass
+    displayName: string
+    description: string
+    symptoms: string[]
+    treatments: string[]
+    severity: Severity
 }
 
 /** Validation helper: check if value is a valid disease class */
@@ -66,4 +79,22 @@ export function isValidBoundingBox(bbox: BoundingBox): boolean {
         bbox.x + bbox.width <= 1 + 1e-6 &&
         bbox.y + bbox.height <= 1 + 1e-6
     )
+}
+
+/** Validation helper: check if disease info is valid */
+export function validateDiseaseInfo(info: DiseaseInfo): string[] {
+    const errors: string[] = []
+    if (!isValidDiseaseClass(info.diseaseClass))
+        errors.push(`Invalid disease class: ${info.diseaseClass}`)
+    if (!info.displayName || info.displayName.trim().length === 0)
+        errors.push("Missing displayName")
+    if (!info.description || info.description.trim().length === 0)
+        errors.push("Missing description")
+    if (!Array.isArray(info.symptoms) || info.symptoms.length === 0)
+        errors.push("Missing or empty symptoms array")
+    if (!Array.isArray(info.treatments) || info.treatments.length === 0)
+        errors.push("Missing or empty treatments array")
+    if (!["healthy", "low", "medium", "high"].includes(info.severity))
+        errors.push(`Invalid severity: ${info.severity}`)
+    return errors
 }

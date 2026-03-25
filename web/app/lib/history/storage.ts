@@ -16,6 +16,7 @@ const DB_VERSION = 1
 const STORE_NAME = "history_items"
 
 let dbInstance: IDBDatabase | null = null
+let initPromise: Promise<void> | null = null
 
 /**
  * Initialize the IndexedDB database.
@@ -24,10 +25,20 @@ let dbInstance: IDBDatabase | null = null
  * @returns Promise that resolves when database is ready
  */
 export async function initHistoryDB(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    if (dbInstance) {
+        return
+    }
+    if (initPromise) {
+        return initPromise
+    }
+
+    initPromise = new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION)
 
-        request.onerror = () => reject(request.error)
+        request.onerror = () => {
+            initPromise = null
+            reject(request.error)
+        }
 
         request.onsuccess = () => {
             dbInstance = request.result
@@ -43,15 +54,20 @@ export async function initHistoryDB(): Promise<void> {
             }
         }
     })
+
+    return initPromise
 }
 
 /**
  * Get the database instance.
  * Throws if database hasn't been initialized.
  */
-function getDB(): IDBDatabase {
+async function getDB(): Promise<IDBDatabase> {
     if (!dbInstance) {
-        throw new Error("Database not initialized. Call initHistoryDB() first.")
+        await initHistoryDB()
+    }
+    if (!dbInstance) {
+        throw new Error("Failed to initialize history database.")
     }
     return dbInstance
 }
@@ -66,7 +82,7 @@ function getDB(): IDBDatabase {
 export async function saveHistoryItem(
     input: HistoryItemInput,
 ): Promise<HistoryItem> {
-    const db = getDB()
+    const db = await getDB()
     const id = generateUUID()
 
     // Convert Blobs to ArrayBuffers for IndexedDB storage
@@ -101,7 +117,7 @@ export async function saveHistoryItem(
  * @returns Promise resolving to array of history items with Object URLs
  */
 export async function getHistoryItems(): Promise<HistoryItem[]> {
-    const db = getDB()
+    const db = await getDB()
 
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, "readonly")
@@ -132,7 +148,7 @@ export async function getHistoryItems(): Promise<HistoryItem[]> {
  * @returns Promise resolving to the history item with Object URLs, or null if not found
  */
 export async function getHistoryItem(id: string): Promise<HistoryItem | null> {
-    const db = getDB()
+    const db = await getDB()
 
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, "readonly")
@@ -155,7 +171,7 @@ export async function getHistoryItem(id: string): Promise<HistoryItem | null> {
  * @returns Promise that resolves when deletion is complete
  */
 export async function deleteHistoryItem(id: string): Promise<void> {
-    const db = getDB()
+    const db = await getDB()
 
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, "readwrite")
@@ -173,7 +189,7 @@ export async function deleteHistoryItem(id: string): Promise<void> {
  * @returns Promise that resolves when all items are deleted
  */
 export async function clearHistory(): Promise<void> {
-    const db = getDB()
+    const db = await getDB()
 
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, "readwrite")
