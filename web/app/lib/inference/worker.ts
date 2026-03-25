@@ -262,13 +262,24 @@ async function loadModel(modelUrl: string): Promise<void> {
   ctx.postMessage({ type: "loading", progress: 0 } as InferenceResponse)
 
   try {
-    // Use ONNX Runtime's built-in fetch (handles CORS via redirect)
-    // Progress is estimated since we can't track the internal download
-    console.log("[Worker] Loading model via ONNX Runtime...")
+    console.log("[Worker] Downloading model...")
     ctx.postMessage({ type: "loading", progress: 10 } as InferenceResponse)
 
+    const response = await fetch(modelUrl, { credentials: "same-origin" })
+
+    if (!response.ok) {
+      throw new Error(
+        `Model download failed (${response.status} ${response.statusText}) from ${modelUrl}`,
+      )
+    }
+
+    const modelBuffer = await response.arrayBuffer()
+
+    console.log("[Worker] Loading model via ONNX Runtime...")
+    ctx.postMessage({ type: "loading", progress: 60 } as InferenceResponse)
+
     const startTime = Date.now()
-    session = await ort.InferenceSession.create(modelUrl, {
+    session = await ort.InferenceSession.create(modelBuffer, {
       executionProviders: ["wasm"],
     })
 

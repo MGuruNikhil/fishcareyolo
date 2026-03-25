@@ -1,12 +1,17 @@
 import type { InferenceResponse, InferenceResult } from "./worker"
 import InferenceWorker from "./worker?worker"
 
-// In development, use Vite's proxy to avoid CORS issues
-// In production, use the direct GitHub releases URL (works with service worker caching)
-const MODEL_URL =
-  import.meta.env.DEV
-    ? "/model/best.onnx"
-    : "https://github.com/fishcareyolo/fishcareyolo/releases/download/prod/best.onnx"
+function getDefaultModelUrl(): string {
+  const configured = import.meta.env.VITE_MODEL_URL
+
+  if (typeof configured === "string" && configured.trim().length > 0) {
+    return configured.trim()
+  }
+
+  return `${import.meta.env.BASE_URL}model/best.onnx`
+}
+
+const MODEL_URL = getDefaultModelUrl()
 
 export type InferenceStatus = "idle" | "downloading" | "loading" | "ready" | "error"
 
@@ -116,6 +121,25 @@ class InferenceService {
     }
 
     this.worker = new InferenceWorker()
+
+    this.worker.onerror = (event: ErrorEvent) => {
+      const message =
+        event.message && event.message.length > 0
+          ? event.message
+          : "Inference worker crashed while loading the model"
+
+      this.updateState({
+        status: "error",
+        error: message,
+      })
+    }
+
+    this.worker.onmessageerror = () => {
+      this.updateState({
+        status: "error",
+        error: "Inference worker failed to process a message",
+      })
+    }
 
     this.worker.onmessage = (event: MessageEvent<InferenceResponse>) => {
       const msg = event.data

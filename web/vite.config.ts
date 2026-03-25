@@ -32,11 +32,10 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,wasm,onnx}"],
         runtimeCaching: [
           {
-            urlPattern:
-              /^https:\/\/github\.com\/fishcareyolo\/fishcareyolo\/releases\/download\/prod\/.*\.onnx$/,
+            urlPattern: /\/model\/.*\.onnx$/,
             handler: "CacheFirst",
             options: {
               cacheName: "onnx-models",
@@ -62,16 +61,5 @@ export default defineConfig({
   // This preserves import.meta.url behavior needed for WASM file loading
   optimizeDeps: {
     exclude: ["onnxruntime-web"],
-  },
-  // Proxy GitHub releases to avoid CORS issues during development
-  server: {
-    proxy: {
-      "/model": {
-        target: "https://github.com",
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/model/, "/fishcareyolo/fishcareyolo/releases/download/prod"),
-        followRedirects: true,
-      },
-    },
   },
 })
