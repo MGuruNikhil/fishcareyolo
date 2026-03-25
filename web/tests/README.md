@@ -23,6 +23,7 @@ Ran 26 tests across 2 files. [153.00ms]
 ### Model Types Tests (`tests/model/types.test.ts`) - 15 tests ✅
 
 Tests validation functions for:
+
 - **BoundingBox validation** (7 tests) - Normalized coordinates 0-1
 - **DiseaseClass validation** (4 tests) - bacterial_infection, fungal_infection, etc.
 - **Confidence validation** (4 tests) - 0-1 range
@@ -30,6 +31,7 @@ Tests validation functions for:
 ### History Storage Tests (`tests/history/storage.test.ts`) - 11 tests ✅
 
 Tests IndexedDB storage operations:
+
 - **Database initialization** (1 test)
 - **Save and retrieve** (3 tests)
 - **Timestamp sorting** (2 tests) - Newest first
@@ -39,11 +41,11 @@ Tests IndexedDB storage operations:
 
 ## Test Coverage
 
-| Module | Tests | Status |
-|--------|-------|--------|
-| `lib/model/types.ts` | 15 | ✅ All passing |
-| `lib/history/storage.ts` | 11 | ✅ All passing |
-| **Total** | **26** | ✅ **100% passing** |
+| Module                   | Tests  | Status              |
+| ------------------------ | ------ | ------------------- |
+| `lib/model/types.ts`     | 15     | ✅ All passing      |
+| `lib/history/storage.ts` | 11     | ✅ All passing      |
+| **Total**                | **26** | ✅ **100% passing** |
 
 ## Implementation Details
 
@@ -52,12 +54,14 @@ Tests IndexedDB storage operations:
 The storage layer uses **ArrayBuffer** instead of Blob for IndexedDB storage:
 
 **Why ArrayBuffer?**
+
 - ✅ Universally serializable with `structuredClone()`
 - ✅ Works in all environments (browser, Bun, Node)
 - ✅ More efficient memory footprint
 - ✅ Compatible with fake-indexeddb testing
 
 **How it works:**
+
 1. **Input**: Components provide `Blob` objects (from file input, canvas, etc.)
 2. **Storage**: Automatically converts to `ArrayBuffer` via `blob.arrayBuffer()`
 3. **Output**: Converts back to `Blob` and creates Object URLs for `<img>` tags
@@ -68,6 +72,7 @@ This approach is transparent to consumers - they work with Blobs, storage handle
 ## Testing Approach
 
 Following mina-fork's patterns:
+
 - ✅ Uses `bun:test` native test runner
 - ✅ Feature-based describe blocks
 - ✅ Helper factory functions for test data
@@ -82,7 +87,7 @@ tests\history\storage.test.ts:
 (pass) **Feature: fish-disease-detection, HistoryStorage** > saveHistoryItem and getHistoryItems > should save and retrieve a history item
 (pass) **Feature: fish-disease-detection, HistoryStorage** > **Feature: fish-disease-detection, Property 4: History sorting by timestamp** > should return items sorted by timestamp descending
 (pass) **Feature: fish-disease-detection, HistoryStorage** > deleteHistoryItem > should remove item from storage
-... 
+...
 ```
 
 ## Files Structure

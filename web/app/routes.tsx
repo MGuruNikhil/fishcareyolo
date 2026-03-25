@@ -4,18 +4,18 @@ import { FileSystemRouter } from "file-system-router"
 import { AppShell } from "@/components/layout/app-shell"
 
 const pages = import.meta.glob("./pages/**/*.tsx", { eager: true }) as Record<
-    string,
-    { default: ComponentType }
+  string,
+  { default: ComponentType }
 >
 
 export default function App() {
-    return (
-        <Router>
-            <Routes>
-                <Route element={<AppShell />}>
-                    <Route path="*" element={<FileSystemRouter pages={pages} />} />
-                </Route>
-            </Routes>
-        </Router>
-    )
+  return (
+    <Router>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="*" element={<FileSystemRouter pages={pages} />} />
+        </Route>
+      </Routes>
+    </Router>
+  )
 }

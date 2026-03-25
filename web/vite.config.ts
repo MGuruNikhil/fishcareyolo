@@ -11,7 +11,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg", "*.wasm"],
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
         name: "mina",
         short_name: "mina",
@@ -32,7 +32,7 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,wasm}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
             urlPattern:
@@ -56,6 +56,22 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./app"),
+    },
+  },
+  // Exclude onnxruntime-web from Vite's dependency optimization
+  // This preserves import.meta.url behavior needed for WASM file loading
+  optimizeDeps: {
+    exclude: ["onnxruntime-web"],
+  },
+  // Proxy GitHub releases to avoid CORS issues during development
+  server: {
+    proxy: {
+      "/model": {
+        target: "https://github.com",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/model/, "/fishcareyolo/fishcareyolo/releases/download/prod"),
+        followRedirects: true,
+      },
     },
   },
 })

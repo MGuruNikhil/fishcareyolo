@@ -5,11 +5,11 @@
  */
 
 export {
-    DISEASE_INFO,
-    getAllDiseaseInfo,
-    getBoundingBoxColor,
-    getDiseaseInfo,
-    getDiseaseLabel,
+  DISEASE_INFO,
+  getAllDiseaseInfo,
+  getBoundingBoxColor,
+  getDiseaseInfo,
+  getDiseaseLabel,
 } from "./info"
 
 export { getSeverityMeta, getWorstSeverity } from "./severity"

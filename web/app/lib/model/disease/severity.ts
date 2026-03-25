@@ -8,11 +8,11 @@ import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react"
 import { DISEASE_INFO } from "./info"
 
 export interface SeverityMeta {
-    label: string
-    color: string
-    bg: string
-    border: string
-    icon: typeof CheckCircle | typeof AlertTriangle | typeof AlertCircle
+  label: string
+  color: string
+  bg: string
+  border: string
+  icon: typeof CheckCircle | typeof AlertTriangle | typeof AlertCircle
 }
 
 /**
@@ -20,40 +20,40 @@ export interface SeverityMeta {
  * Returns color, background, border, icon, and label for UI rendering.
  */
 export function getSeverityMeta(severity: Severity): SeverityMeta {
-    switch (severity) {
-        case "healthy":
-            return {
-                label: "Healthy",
-                color: "var(--healthy)",
-                bg: "var(--healthy-bg)",
-                border: "var(--healthy-border)",
-                icon: CheckCircle,
-            }
-        case "low":
-            return {
-                label: "Low",
-                color: "var(--low)",
-                bg: "var(--low-bg)",
-                border: "var(--low-border)",
-                icon: AlertTriangle,
-            }
-        case "medium":
-            return {
-                label: "Medium",
-                color: "var(--medium)",
-                bg: "var(--medium-bg)",
-                border: "var(--medium-border)",
-                icon: AlertTriangle,
-            }
-        case "high":
-            return {
-                label: "High",
-                color: "var(--medium)",
-                bg: "var(--medium-bg)",
-                border: "var(--medium-border)",
-                icon: AlertCircle,
-            }
-    }
+  switch (severity) {
+    case "healthy":
+      return {
+        label: "Healthy",
+        color: "var(--healthy)",
+        bg: "var(--healthy-bg)",
+        border: "var(--healthy-border)",
+        icon: CheckCircle,
+      }
+    case "low":
+      return {
+        label: "Low",
+        color: "var(--low)",
+        bg: "var(--low-bg)",
+        border: "var(--low-border)",
+        icon: AlertTriangle,
+      }
+    case "medium":
+      return {
+        label: "Medium",
+        color: "var(--medium)",
+        bg: "var(--medium-bg)",
+        border: "var(--medium-border)",
+        icon: AlertTriangle,
+      }
+    case "high":
+      return {
+        label: "High",
+        color: "var(--medium)",
+        bg: "var(--medium-bg)",
+        border: "var(--medium-border)",
+        icon: AlertCircle,
+      }
+  }
 }
 
 /**
@@ -61,13 +61,13 @@ export function getSeverityMeta(severity: Severity): SeverityMeta {
  * Severity order: high > medium > low > healthy
  */
 export function getWorstSeverity(detections: Detection[]): Severity {
-    const order: Severity[] = ["high", "medium", "low", "healthy"]
-    for (const severity of order) {
-        const hasSeverity = detections.some((det) => {
-            const info = DISEASE_INFO[det.diseaseClass]
-            return info.severity === severity
-        })
-        if (hasSeverity) return severity
-    }
-    return "healthy"
+  const order: Severity[] = ["high", "medium", "low", "healthy"]
+  for (const severity of order) {
+    const hasSeverity = detections.some((det) => {
+      const info = DISEASE_INFO[det.diseaseClass]
+      return info.severity === severity
+    })
+    if (hasSeverity) return severity
+  }
+  return "healthy"
 }

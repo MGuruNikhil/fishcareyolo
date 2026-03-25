@@ -81,7 +81,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  
+
   /* Disease severity colors - light mode */
   --healthy: oklch(0.627 0.194 145.077);
   --healthy-bg: oklch(0.96 0.024 145.077);
@@ -126,7 +126,7 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  
+
   /* Disease severity colors - dark mode */
   --healthy: oklch(0.627 0.194 145.077);
   --healthy-bg: oklch(0.262 0.051 152.545);
