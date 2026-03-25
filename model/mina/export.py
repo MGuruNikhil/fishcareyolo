@@ -79,6 +79,64 @@ def export_tflite(
     return export_path
 
 
+def export_tfjs(
+    weights_path: str | Path,
+    imgsz: int = 640,
+    output_dir: str | Path | None = None,
+    nms: bool = True,
+) -> Path:
+    """
+    Export YOLOv8 model to TensorFlow.js format.
+
+    Args:
+        weights_path: Path to the trained .pt weights file
+        imgsz: Input image size for the exported model
+        output_dir: Optional output directory (defaults to same as weights)
+        nms: Whether to include NMS in the model
+
+    Returns:
+        Path to the exported TFJS model directory
+    """
+    from mina.train import get_data_yaml_path
+
+    weights_path = Path(weights_path)
+
+    if not weights_path.exists():
+        raise FileNotFoundError(f"Weights file not found: {weights_path}")
+
+    data_yaml = get_data_yaml_path()
+
+    print(f"Loading model from: {weights_path}")
+    model = YOLO(str(weights_path))
+
+    print(f"Exporting to TFJS (imgsz={imgsz}, nms={nms})...")
+
+    export_path = model.export(
+        format="tfjs",
+        data=str(data_yaml),
+        imgsz=imgsz,
+        simplify=True,
+        nms=nms,
+    )
+
+    export_path = Path(export_path)
+
+    if output_dir:
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        final_path = output_dir / export_path.name
+        if export_path.exists():
+            import shutil
+
+            shutil.move(str(export_path), str(final_path))
+        export_path = final_path
+
+    print("\nExport complete!")
+    print(f"TFJS model saved to: {export_path}")
+
+    return export_path
+
+
 def get_weights_or_default(weights_path: str | Path | None) -> Path:
     """
     Get weights path, falling back to most recent training run.
