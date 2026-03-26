@@ -62,9 +62,6 @@ export default function AnalysisPage() {
       // Subscribe to model loading status
       const unsubscribe = inferenceService.onStatusChange((state) => {
         setModelStatus(state.status)
-        if (state.status === "error") {
-          throw new Error(state.error || "Failed to load model")
-        }
       })
 
       try {

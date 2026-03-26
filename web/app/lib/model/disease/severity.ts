@@ -48,9 +48,9 @@ export function getSeverityMeta(severity: Severity): SeverityMeta {
     case "high":
       return {
         label: "High",
-        color: "var(--medium)",
-        bg: "var(--medium-bg)",
-        border: "var(--medium-border)",
+        color: "var(--high)",
+        bg: "var(--high-bg)",
+        border: "var(--high-border)",
         icon: AlertCircle,
       }
   }

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { ArrowLeft } from "lucide-react"
 import { getHistoryItem, revokeHistoryItemUrls } from "@/lib/history"
 import type { HistoryItem } from "@/lib/history/types"
@@ -10,6 +10,7 @@ export default function HistoryDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [item, setItem] = useState<HistoryItem | null>(null)
+  const itemRef = useRef<HistoryItem | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
@@ -26,6 +27,7 @@ export default function HistoryDetailPage() {
       .then((result) => {
         if (!mounted) return
         if (result) {
+          itemRef.current = result
           setItem(result)
         } else {
           setNotFound(true)
@@ -42,8 +44,8 @@ export default function HistoryDetailPage() {
 
     return () => {
       mounted = false
-      if (item) {
-        revokeHistoryItemUrls(item)
+      if (itemRef.current) {
+        revokeHistoryItemUrls(itemRef.current)
       }
     }
   }, [id])

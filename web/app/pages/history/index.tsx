@@ -15,9 +15,10 @@ function formatDate(ts: number) {
 }
 
 function getSummary(item: HistoryItem) {
-  const diseases = item.results.detections.filter(
-    (d) => DISEASE_INFO[d.diseaseClass].severity !== "low",
-  )
+  const diseases = item.results.detections.filter((d) => {
+    const severity = DISEASE_INFO[d.diseaseClass].severity
+    return severity !== "healthy" && severity !== "low"
+  })
   if (diseases.length === 0) return "No diseases detected"
   if (diseases.length === 1) return DISEASE_INFO[diseases[0].diseaseClass].displayName
   return `${diseases.length} diseases detected`

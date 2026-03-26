@@ -92,6 +92,9 @@
   --medium: oklch(0.637 0.237 25.331);
   --medium-bg: oklch(0.96 0.047 25.331);
   --medium-border: oklch(0.637 0.237 25.331);
+  --high: oklch(0.537 0.24 25.331);
+  --high-bg: oklch(0.94 0.057 25.331);
+  --high-border: oklch(0.537 0.24 25.331);
 }
 
 .dark {
@@ -137,6 +140,9 @@
   --medium: oklch(0.637 0.237 25.331);
   --medium-bg: oklch(0.258 0.092 25.331);
   --medium-border: oklch(0.537 0.237 25.331);
+  --high: oklch(0.637 0.257 25.331);
+  --high-bg: oklch(0.358 0.092 25.331);
+  --high-border: oklch(0.537 0.257 25.331);
 }
 
 @layer base {
