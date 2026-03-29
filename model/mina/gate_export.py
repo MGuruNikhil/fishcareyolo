@@ -58,7 +58,7 @@ def export_gate_onnx(
     print(f"Exporting to ONNX (opset={opset}) → {output_path}")
     torch.onnx.export(
         model,
-        dummy,
+        (dummy,),
         str(output_path),
         # Name 'images' intentionally matches the disease worker's input name
         # so the JS gate worker design stays consistent.
@@ -66,6 +66,7 @@ def export_gate_onnx(
         output_names=["output"],
         dynamic_axes={"images": {0: "batch"}, "output": {0: "batch"}},
         opset_version=opset,
+        dynamo=False,  # Force legacy TorchScript exporter — avoids onnxscript/ml_dtypes dep
     )
 
     size_mb = output_path.stat().st_size / (1024 * 1024)
