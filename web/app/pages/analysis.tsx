@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useCameraContext } from "@/lib/camera/context"
 import { useDetectionContext } from "@/lib/detection/context"
-import { inferenceService, transformResults } from "@/lib/inference"
+import { inferenceService, gateService, transformResults } from "@/lib/inference"
 import type { InferenceStatus } from "@/lib/inference"
 import { saveHistoryItem } from "@/lib/history"
 import { loadImageFromBlob, createAnnotatedImage } from "@/lib/utils/image"
@@ -11,13 +11,15 @@ import { cn } from "@/lib/utils"
 type AnalysisStep =
   | "loading-image"
   | "loading-model"
+  | "running-gate"
   | "running-inference"
   | "processing-results"
   | "saving"
 
 const STEP_LABELS: Record<AnalysisStep, string> = {
   "loading-image": "Loading image data",
-  "loading-model": "Loading disease detection model",
+  "loading-model": "Loading AI models",
+  "running-gate": "Checking for fish",
   "running-inference": "Running disease detection",
   "processing-results": "Processing detections",
   saving: "Saving to history",
@@ -26,14 +28,32 @@ const STEP_LABELS: Record<AnalysisStep, string> = {
 const STEPS: AnalysisStep[] = [
   "loading-image",
   "loading-model",
+  "running-gate",
   "running-inference",
   "processing-results",
   "saving",
 ]
 
+/** Wait until a service reaches "ready" (or reject on "error"). */
+function waitForReady(
+  service: typeof inferenceService | typeof gateService,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const unsub = service.onStatusChange((state) => {
+      if (state.status === "ready") {
+        unsub()
+        resolve()
+      } else if (state.status === "error") {
+        unsub()
+        reject(new Error(state.error || "Failed to load model"))
+      }
+    })
+  })
+}
+
 export default function AnalysisPage() {
   const { capturedImage } = useCameraContext()
-  const { setCurrentResult } = useDetectionContext()
+  const { setCurrentOutcome } = useDetectionContext()
   const navigate = useNavigate()
   const ran = useRef(false)
   const [currentStep, setCurrentStep] = useState<AnalysisStep>("loading-image")
@@ -49,56 +69,62 @@ export default function AnalysisPage() {
     ran.current = true
 
     runAnalysis(capturedImage)
-  }, [capturedImage, navigate, setCurrentResult])
+  }, [capturedImage, navigate, setCurrentOutcome])
 
   async function runAnalysis(imageBlob: Blob) {
     try {
-      // Step 1: Load image
+      // ── Step 1: Load image ────────────────────────────────────────────────
       setCurrentStep("loading-image")
       const img = await loadImageFromBlob(imageBlob)
 
-      // Step 2: Ensure model is loaded
+      // ── Step 2: Load both models in parallel ─────────────────────────────
       setCurrentStep("loading-model")
 
-      // Subscribe to model loading status
-      const unsubscribe = inferenceService.onStatusChange((state) => {
+      // Mirror the disease-model status for the loading indicator
+      const unsubDisease = inferenceService.onStatusChange((state) => {
         setModelStatus(state.status)
       })
 
       try {
-        await inferenceService.serve()
+        // Fire both serves simultaneously — gate (~2.5 MB) will finish first
+        inferenceService.serve()
+        gateService.serve()
 
-        // Wait for model to be ready
-        const status = inferenceService.getStatus()
-        if (status.status !== "ready") {
-          // Wait for ready status
-          await new Promise<void>((resolve, reject) => {
-            const checkStatus = inferenceService.onStatusChange((state) => {
-              if (state.status === "ready") {
-                checkStatus()
-                resolve()
-              } else if (state.status === "error") {
-                checkStatus()
-                reject(new Error(state.error || "Failed to load model"))
-              }
-            })
-          })
-        }
+        // Wait for both to be ready before proceeding
+        await Promise.all([
+          inferenceService.getStatus().status === "ready"
+            ? Promise.resolve()
+            : waitForReady(inferenceService),
+          gateService.getStatus().status === "ready"
+            ? Promise.resolve()
+            : waitForReady(gateService),
+        ])
       } finally {
-        unsubscribe()
+        unsubDisease()
       }
 
-      // Step 3: Run inference
+      // ── Step 3: Run gate check ────────────────────────────────────────────
+      setCurrentStep("running-gate")
+      const gateResult = await gateService.run(img)
+
+      if (!gateResult.isFish) {
+        // Not a fish — show the no-fish page; do NOT save to history
+        setCurrentOutcome({ kind: "no_fish", gateConfidence: gateResult.confidence })
+        navigate("/no-fish", { replace: true })
+        return
+      }
+
+      // ── Step 4: Run disease inference (gate passed) ───────────────────────
       setCurrentStep("running-inference")
       const startTime = performance.now()
       const rawResults = await inferenceService.run(img)
       const inferenceTimeMs = performance.now() - startTime
 
-      // Step 4: Transform results
+      // ── Step 5: Transform results ─────────────────────────────────────────
       setCurrentStep("processing-results")
       const result = transformResults(rawResults, inferenceTimeMs)
 
-      // Step 5: Create annotated image and save to history
+      // ── Step 6: Create annotated image and save to history ────────────────
       setCurrentStep("saving")
       const annotatedImage = await createAnnotatedImage(imageBlob, result.detections)
 
@@ -109,14 +135,13 @@ export default function AnalysisPage() {
         results: result,
       })
 
-      // Set result in context and navigate to results page
-      setCurrentResult(result)
+      // Set outcome in context and navigate to results page
+      setCurrentOutcome({ kind: "detections", result })
       navigate("/results", { replace: true })
     } catch (err) {
       console.error("Analysis failed:", err)
       setError(err instanceof Error ? err.message : "Analysis failed")
 
-      // Navigate back to preview after a short delay so user can see error
       setTimeout(() => {
         navigate("/preview", { replace: true })
       }, 2000)

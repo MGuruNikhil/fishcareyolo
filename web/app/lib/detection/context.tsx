@@ -1,21 +1,21 @@
 import React, { createContext, useContext, useState } from "react"
-import type { InferenceResult } from "@/lib/model/types"
+import type { AnalysisOutcome } from "@/lib/model/types"
 
 interface DetectionState {
-  currentResult: InferenceResult | null
-  setCurrentResult: (result: InferenceResult | null) => void
+  currentOutcome: AnalysisOutcome | null
+  setCurrentOutcome: (outcome: AnalysisOutcome | null) => void
 }
 
 const DetectionContext = createContext<DetectionState | null>(null)
 
 export function DetectionProvider({ children }: { children: React.ReactNode }) {
-  const [currentResult, setCurrentResult] = useState<InferenceResult | null>(null)
+  const [currentOutcome, setCurrentOutcome] = useState<AnalysisOutcome | null>(null)
 
   return (
     <DetectionContext.Provider
       value={{
-        currentResult,
-        setCurrentResult,
+        currentOutcome,
+        setCurrentOutcome,
       }}
     >
       {children}

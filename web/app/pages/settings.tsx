@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react"
-import { Monitor, Moon, Sun, Trash2 } from "lucide-react"
+import { Monitor, Moon, Sun, Trash2, CheckCircle2, Loader2, AlertCircle, Circle } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { clearHistory, getHistoryItems } from "@/lib/history"
+import { inferenceService, gateService } from "@/lib/inference"
+import type { InferenceStatus, GateStatus } from "@/lib/inference"
 
 type Theme = "light" | "dark" | "system"
 
@@ -15,14 +17,69 @@ const THEME_OPTIONS: {
   { value: "system", label: "System", icon: Monitor },
 ]
 
+type ModelStatus = InferenceStatus | GateStatus
+
+function ModelStatusBadge({ status }: { status: ModelStatus }) {
+  if (status === "ready") {
+    return (
+      <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+        <CheckCircle2 size={12} aria-hidden="true" />
+        Cached
+      </span>
+    )
+  }
+  if (status === "loading") {
+    return (
+      <span className="flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+        <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+        Loading…
+      </span>
+    )
+  }
+  if (status === "error") {
+    return (
+      <span className="flex items-center gap-1.5 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
+        <AlertCircle size={12} aria-hidden="true" />
+        Error
+      </span>
+    )
+  }
+  // idle / downloading
+  return (
+    <span className="flex items-center gap-1.5 rounded-full border border-border bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground/60">
+      <Circle size={12} aria-hidden="true" />
+      Not loaded
+    </span>
+  )
+}
+
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [historyCount, setHistoryCount] = useState(0)
+  const [diseaseModelStatus, setDiseaseModelStatus] = useState<ModelStatus>(
+    inferenceService.getStatus().status,
+  )
+  const [gateModelStatus, setGateModelStatus] = useState<ModelStatus>(
+    gateService.getStatus().status,
+  )
 
   useEffect(() => {
     getHistoryItems()
       .then((items) => setHistoryCount(items.length))
       .catch((err) => console.error("Failed to load history count:", err))
+
+    // Subscribe to model status updates
+    const unsubDisease = inferenceService.onStatusChange((state) =>
+      setDiseaseModelStatus(state.status),
+    )
+    const unsubGate = gateService.onStatusChange((state) =>
+      setGateModelStatus(state.status),
+    )
+
+    return () => {
+      unsubDisease()
+      unsubGate()
+    }
   }, [])
 
   const handleClearHistory = async () => {
@@ -111,6 +168,47 @@ export default function SettingsPage() {
                   )
                 })}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Models Section */}
+        <section className="flex flex-col gap-3" aria-labelledby="models-heading">
+          <h2
+            className="pl-4 font-mono text-[11px] font-bold uppercase tracking-widest text-muted-foreground"
+            id="models-heading"
+          >
+            AI Models
+          </h2>
+
+          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-colors duration-300">
+            {/* Gate model row */}
+            <div className="flex items-center justify-between gap-4 p-6 md:px-8">
+              <div className="flex-1 min-w-0">
+                <p className="mb-1 text-base font-semibold tracking-wide text-card-foreground">
+                  Fish Gate
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Validates that submitted images contain a fish · ~2.5 MB
+                </p>
+              </div>
+              <ModelStatusBadge status={gateModelStatus} />
+            </div>
+
+            {/* Divider */}
+            <div className="h-px w-full bg-border" aria-hidden="true" />
+
+            {/* Disease model row */}
+            <div className="flex items-center justify-between gap-4 p-6 md:px-8">
+              <div className="flex-1 min-w-0">
+                <p className="mb-1 text-base font-semibold tracking-wide text-card-foreground">
+                  Disease Detector
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Identifies fish diseases from images · ~12 MB
+                </p>
+              </div>
+              <ModelStatusBadge status={diseaseModelStatus} />
             </div>
           </div>
         </section>
