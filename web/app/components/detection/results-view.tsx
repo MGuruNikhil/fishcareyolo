@@ -1,6 +1,5 @@
 import type { InferenceResult } from "@/lib/model/types"
 import { AnnotatedImage } from "./annotated-image"
-import { ResultsSummary } from "./results-summary"
 import { DetectionCard } from "./detection-card"
 
 interface Props {
@@ -19,32 +18,43 @@ function formatTimestamp(ts: number) {
 
 export function ResultsView({ imageUrl, result, showTimestamp, timestamp }: Props) {
   return (
-    <div className="flex flex-1 flex-col md:grid md:grid-cols-[1fr_400px] md:grid-rows-[auto_1fr] md:items-start">
+    <div className="flex flex-1 flex-col w-full bg-background md:grid md:grid-cols-[1fr_400px] md:grid-rows-[auto_1fr] md:items-start">
+      {/* Cleaned up Timestamp (No bulky background/border) */}
       {showTimestamp && timestamp && (
-        <p className="border-b bg-card px-5 py-3 font-mono text-xs uppercase tracking-[0.06em] text-muted-foreground md:col-span-2">
-          Scan — {formatTimestamp(timestamp)}
-        </p>
+        <div className="px-6 pt-6 pb-2 md:col-span-2 md:px-10">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+            Scan • {formatTimestamp(timestamp)}
+          </p>
+        </div>
       )}
 
-      {/* Image container - on desktop: fills left column, vertically centered */}
-      <div className="md:col-start-1 md:row-start-2 md:self-stretch md:flex md:items-center md:justify-center">
-        <AnnotatedImage imageUrl={imageUrl} detections={result.detections} />
+      {/* Left Column: Image Container */}
+      <div className="flex w-full items-center justify-center p-6 md:col-start-1 md:row-start-2 md:self-stretch md:px-10 md:py-6">
+        <div className="relative flex w-full max-w-md items-center justify-center overflow-hidden rounded-[2rem] border border-border bg-card shadow-lg md:max-w-full md:h-[calc(100vh-14rem)] transition-colors duration-300">
+          <AnnotatedImage imageUrl={imageUrl} detections={result.detections} />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4 p-4 pb-8 md:col-start-2 md:row-start-2 md:max-h-[calc(100dvh-120px)] md:overflow-y-auto md:border-l md:px-8 md:py-6 md:pb-10">
-        <ResultsSummary detections={result.detections} />
+      {/* Right Column: Summary & Detections Scroll Area */}
+      {/* Added native CSS hiding utilities to completely hide the scrollbar across all browsers */}
+      <div className="flex flex-col gap-8 px-6 pb-32 md:col-start-2 md:row-start-2 md:max-h-[calc(100dvh-60px)] md:overflow-y-auto md:border-l md:border-border md:px-8 md:py-6 md:pb-12 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden transition-colors duration-300">
+        <div className="flex flex-col gap-5">
+          {/* Cleaned up Section Header (No pill badges) */}
+          <div className="flex items-baseline gap-3">
+            <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Detections
+            </h2>
+            <span className="font-mono text-[10px] font-medium tracking-widest text-muted-foreground/60 uppercase">
+              {result.detections.length} {result.detections.length === 1 ? "Found" : "Found"}
+            </span>
+          </div>
 
-        <h2 className="flex items-center gap-2 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-secondary-foreground">
-          Detections
-          <span className="rounded-full border bg-card px-[7px] py-px text-xs text-muted-foreground">
-            {result.detections.length}
-          </span>
-        </h2>
-
-        <div className="flex flex-col gap-2">
-          {result.detections.map((det) => (
-            <DetectionCard key={det.id} detection={det} />
-          ))}
+          {/* Cards List */}
+          <div className="flex flex-col gap-3">
+            {result.detections.map((det) => (
+              <DetectionCard key={det.id} detection={det} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

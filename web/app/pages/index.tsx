@@ -149,17 +149,48 @@ export default function CameraPage() {
     const canvas = canvasRef.current
     if (!video || !canvas) return
 
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+    const videoWidth = video.videoWidth
+    const videoHeight = video.videoHeight
+    const containerWidth = video.clientWidth
+    const containerHeight = video.clientHeight
+
+    if (!videoWidth || !videoHeight || !containerWidth || !containerHeight) return
+
+    // Calculate aspect ratios
+    const videoRatio = videoWidth / videoHeight
+    const containerRatio = containerWidth / containerHeight
+
+    let sWidth = videoWidth
+    let sHeight = videoHeight
+    let sx = 0
+    let sy = 0
+
+    // Math to replicate CSS object-fit: cover
+    if (containerRatio > videoRatio) {
+      // Container is wider. Video width fits perfectly, height is cropped top/bottom.
+      sHeight = videoWidth / containerRatio
+      sy = (videoHeight - sHeight) / 2
+    } else {
+      // Container is taller. Video height fits perfectly, width is cropped left/right.
+      sWidth = videoHeight * containerRatio
+      sx = (videoWidth - sWidth) / 2
+    }
+
+    // Set canvas to the cropped high-res dimensions
+    canvas.width = sWidth
+    canvas.height = sHeight
+
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
+    // Handle mirror effect for front camera
     if (facingMode === "user") {
       ctx.translate(canvas.width, 0)
       ctx.scale(-1, 1)
     }
 
-    ctx.drawImage(video, 0, 0)
+    // Draw only the visible portion of the video to the canvas
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight)
 
     // Convert to Blob
     const blob = await new Promise<Blob>((resolve, reject) => {
@@ -186,92 +217,98 @@ export default function CameraPage() {
   }
 
   return (
-    <div className="relative flex flex-1 flex-col bg-black">
+    <div className="relative flex flex-1 flex-col bg-foreground h-full max-h-dvh w-full">
       {/* Viewfinder */}
-      <div className="relative flex-1 overflow-hidden bg-black">
+      <div className="relative flex-1 overflow-hidden bg-foreground">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className={cn(
-            "h-full w-full object-cover",
+            "h-full w-full object-cover transition-opacity duration-500",
             facingMode === "user" && "scale-x-[-1]",
-            permission === "granted" ? "block" : "hidden",
+            permission === "granted" ? "opacity-100" : "opacity-0 hidden",
           )}
           aria-label="Live camera feed"
         />
 
         {permission !== "granted" && (
           <div
-            className="flex h-full flex-col items-center justify-center gap-4 text-muted-foreground"
+            className="flex h-full flex-col items-center justify-center gap-4 bg-background text-white"
             role="status"
           >
-            <Camera size={40} className="opacity-40" aria-hidden="true" />
-            <p className="text-sm">Camera unavailable</p>
+            <Camera size={48} className="opacity-50" aria-hidden="true" />
+            <p className="text-sm font-medium tracking-wide">Camera unavailable</p>
           </div>
         )}
-
-        {/* Corner brackets for viewfinder aesthetic */}
-        <div className="pointer-events-none absolute left-5 top-5 h-6 w-6 border-l-2 border-t-2 border-white/60" />
-        <div className="pointer-events-none absolute right-5 top-5 h-6 w-6 border-r-2 border-t-2 border-white/60" />
-        <div className="pointer-events-none absolute bottom-5 left-5 h-6 w-6 border-b-2 border-l-2 border-white/60" />
-        <div className="pointer-events-none absolute bottom-5 right-5 h-6 w-6 border-b-2 border-r-2 border-white/60" />
       </div>
 
-      {/* Error Banner */}
+      {/* Floating Error Banner */}
       {cameraError && (
         <div
-          className="absolute left-0 right-0 top-0 z-30 flex items-start gap-2 border-b border-white/10 bg-red-950/80 p-4 text-sm text-red-200 backdrop-blur-sm"
+          className="absolute left-4 right-4 top-4 z-40 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/15 p-4 text-sm text-red-100 shadow-2xl backdrop-blur-md"
           role="alert"
         >
-          <AlertCircle size={16} aria-hidden="true" />
+          <AlertCircle size={20} className="shrink-0 text-red-400" aria-hidden="true" />
           <p className="leading-relaxed">{cameraError}</p>
         </div>
       )}
 
-      {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent px-8 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:px-12">
+      {/* Modern Floating Hint */}
+      <div className="pointer-events-none absolute bottom-[calc(140px+env(safe-area-inset-bottom))] left-0 right-0 z-30 flex justify-center px-4 md:bottom-[160px]">
+        <div className="rounded-full border border-border/50 bg-background/80 px-5 py-2.5 backdrop-blur-md shadow-xl">
+          <p className="text-center text-xs font-medium tracking-wide text-foreground">
+            Position the fish clearly in frame
+          </p>
+        </div>
+      </div>
+
+      {/* Controls Bar */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-between bg-transparent px-8 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-24 md:px-16">
+        {/* Gallery Button */}
         <button
-          className="flex min-h-14 min-w-14 flex-col items-center justify-center gap-1 text-white/70 transition-colors hover:text-white"
+          className="group flex flex-col items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95"
           onClick={() => fileInputRef.current?.click()}
           aria-label="Choose from gallery"
         >
-          <Image size={20} aria-hidden="true" />
-          <span className="text-[11px] font-medium uppercase tracking-wider">Gallery</span>
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-white/60 text-black shadow-xl transition-colors group-hover:bg-white/80">
+            <Image size={24} aria-hidden="true" />
+          </div>
         </button>
 
+        {/* Capture Shutter Button */}
         <button
-          className="flex size-[72px] items-center justify-center rounded-full border-[3px] border-white/80 transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 md:size-20"
+          className="group flex size-[80px] items-center justify-center rounded-full border-[4px] border-white/40 shadow-xl transition-all hover:border-white/70 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 md:size-[92px]"
           onClick={handleCapture}
           disabled={permission !== "granted"}
           aria-label="Capture photo for analysis"
         >
           <span
-            className="size-[54px] rounded-full bg-white transition-colors active:bg-white/85 md:size-[62px]"
+            className="size-[60px] rounded-full bg-white/80 transition-all group-hover:scale-[0.96] group-active:scale-90 md:size-[70px]"
             aria-hidden="true"
           />
         </button>
 
+        {/* Flip Camera Button */}
         {permission === "granted" ? (
-          <div className="flex min-w-14 items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-2">
             <button
-              className="flex size-12 items-center justify-center rounded-full bg-white/15 text-white transition-all hover:bg-white/25 active:scale-95"
+              className="group flex size-14 items-center justify-center rounded-2xl bg-white/60 text-black shadow-xl transition-all hover:scale-105 hover:bg-white/80 active:scale-95"
               onClick={toggleCamera}
               aria-label="Flip camera"
             >
-              <RefreshCw size={22} aria-hidden="true" />
+              <RefreshCw
+                size={24}
+                className="transition-transform duration-500 group-hover:rotate-180"
+                aria-hidden="true"
+              />
             </button>
           </div>
         ) : (
-          <div className="min-w-14" aria-hidden="true" />
+          <div className="w-14" aria-hidden="true" />
         )}
       </div>
-
-      {/* Hint */}
-      <p className="pointer-events-none absolute bottom-[calc(100px+env(safe-area-inset-bottom))] left-0 right-0 z-15 px-4 py-2 text-center text-xs tracking-wide text-white/60 [text-shadow:0_1px_2px_rgba(0,0,0,0.8)]">
-        Position the fish clearly in frame. Ensure good lighting.
-      </p>
 
       <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
       <input

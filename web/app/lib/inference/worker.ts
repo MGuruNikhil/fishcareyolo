@@ -165,16 +165,15 @@ function postprocessOutput(output: Float32Array, dims: number[]): InferenceResul
     numAnchors = dims[2]
     hasObjectness = featureStride === numClasses + 5
     classOffset = hasObjectness ? 5 : 4
-    readValue = (anchorIdx: number, featureIdx: number) => output[featureIdx * numAnchors + anchorIdx]
-  } else if (
-    dims.length === 3 &&
-    (dims[2] === numClasses + 4 || dims[2] === numClasses + 5)
-  ) {
+    readValue = (anchorIdx: number, featureIdx: number) =>
+      output[featureIdx * numAnchors + anchorIdx]
+  } else if (dims.length === 3 && (dims[2] === numClasses + 4 || dims[2] === numClasses + 5)) {
     featureStride = dims[2]
     numAnchors = dims[1]
     hasObjectness = featureStride === numClasses + 5
     classOffset = hasObjectness ? 5 : 4
-    readValue = (anchorIdx: number, featureIdx: number) => output[anchorIdx * featureStride + featureIdx]
+    readValue = (anchorIdx: number, featureIdx: number) =>
+      output[anchorIdx * featureStride + featureIdx]
   } else {
     throw new Error(`Unsupported output shape: [${dims.join(", ")}]`)
   }
@@ -194,14 +193,14 @@ function postprocessOutput(output: Float32Array, dims: number[]): InferenceResul
     }
 
     const rawObjConf = hasObjectness ? readValue(i, 4) : 1
-    const objConf = hasObjectness && (rawObjConf < 0 || rawObjConf > 1) ? sigmoid(rawObjConf) : rawObjConf
+    const objConf =
+      hasObjectness && (rawObjConf < 0 || rawObjConf > 1) ? sigmoid(rawObjConf) : rawObjConf
 
     let maxScore = 0
     let classId = 0
     for (let c = 0; c < numClasses; c++) {
       const rawClassConf = readValue(i, classOffset + c)
-      const classConf =
-        rawClassConf < 0 || rawClassConf > 1 ? sigmoid(rawClassConf) : rawClassConf
+      const classConf = rawClassConf < 0 || rawClassConf > 1 ? sigmoid(rawClassConf) : rawClassConf
       const score = objConf * classConf
       if (score > maxScore) {
         maxScore = score
@@ -314,7 +313,9 @@ async function runInference(id: string, imageData: ImageData): Promise<void> {
     console.log("[Worker] Preprocessing image...")
     const preprocessStart = performance.now()
     const inputData = preprocessImage(imageData)
-    console.log(`[Worker] Preprocessing completed in ${(performance.now() - preprocessStart).toFixed(2)}ms`)
+    console.log(
+      `[Worker] Preprocessing completed in ${(performance.now() - preprocessStart).toFixed(2)}ms`,
+    )
 
     console.log("[Worker] Creating input tensor...")
     const inputTensor = new ort.Tensor("float32", inputData, [1, 3, IMAGE_SIZE, IMAGE_SIZE])
@@ -322,7 +323,9 @@ async function runInference(id: string, imageData: ImageData): Promise<void> {
     console.log("[Worker] Running ONNX inference...")
     const inferenceStart = performance.now()
     const results = await session.run({ images: inputTensor })
-    console.log(`[Worker] ONNX inference completed in ${(performance.now() - inferenceStart).toFixed(2)}ms`)
+    console.log(
+      `[Worker] ONNX inference completed in ${(performance.now() - inferenceStart).toFixed(2)}ms`,
+    )
 
     // Get the first output tensor (YOLOv8 uses 'output0')
     const outputNames = Object.keys(results)
@@ -333,7 +336,9 @@ async function runInference(id: string, imageData: ImageData): Promise<void> {
     console.log("[Worker] Postprocessing output, dims:", outputDims)
     const postprocessStart = performance.now()
     const detections = postprocessOutput(outputTensor, outputDims)
-    console.log(`[Worker] Postprocessing completed in ${(performance.now() - postprocessStart).toFixed(2)}ms`)
+    console.log(
+      `[Worker] Postprocessing completed in ${(performance.now() - postprocessStart).toFixed(2)}ms`,
+    )
     console.log(`[Worker] Found ${detections.length} detections`)
 
     ctx.postMessage({
