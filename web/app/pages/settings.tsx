@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
-import { Monitor, Moon, Sun, Trash2, CheckCircle2, Loader2, AlertCircle, Circle } from "lucide-react"
+import { Monitor, Moon, Sun, Trash2, CheckCircle2, Loader2, AlertCircle, Circle, Download } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
+import { usePwaInstall } from "@/hooks/use-pwa-install"
 import { clearHistory, getHistoryItems } from "@/lib/history"
 import { inferenceService, gateService } from "@/lib/inference"
 import type { InferenceStatus, GateStatus } from "@/lib/inference"
@@ -55,6 +56,7 @@ function ModelStatusBadge({ status }: { status: ModelStatus }) {
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
+  const { isInstallAvailable, promptInstall } = usePwaInstall()
   const [historyCount, setHistoryCount] = useState(0)
   const [diseaseModelStatus, setDiseaseModelStatus] = useState<ModelStatus>(
     inferenceService.getStatus().status,
@@ -250,6 +252,44 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+
+        {/* Install Section (Only shown if installable) */}
+        {isInstallAvailable && (
+          <section className="flex flex-col gap-3" aria-labelledby="install-heading">
+            <h2
+              className="pl-4 font-mono text-[11px] font-bold uppercase tracking-widest text-muted-foreground"
+              id="install-heading"
+            >
+              App
+            </h2>
+
+            <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-colors duration-300">
+              <div className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between md:px-8">
+                <div className="flex-1 min-w-0">
+                  <p className="mb-1 text-base font-semibold tracking-wide text-card-foreground">
+                    Install Mina
+                  </p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Add to your home screen for fast, offline access.
+                  </p>
+                </div>
+
+                <button
+                  onClick={promptInstall}
+                  className="group flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-6 text-sm font-medium tracking-wide text-background shadow-xl transition-transform active:scale-95 md:w-auto"
+                  aria-label="Install App"
+                >
+                  <Download
+                    size={18}
+                    className="transition-transform group-hover:translate-y-0.5"
+                    aria-hidden="true"
+                  />
+                  <span>Install</span>
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* About Section */}
         <section className="flex flex-col gap-3" aria-labelledby="about-heading">

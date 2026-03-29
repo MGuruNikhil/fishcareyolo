@@ -1,5 +1,10 @@
 import * as ort from "onnxruntime-web"
 
+// In development, Vite natively resolves the ONNX modules from node_modules.
+// In production, vite-plugin-static-copy copies the WASM files to the build root (/).
+if (import.meta.env.PROD) {
+  ort.env.wasm.wasmPaths = "/"
+}
 export interface GateRequest {
   id: string
   type: "load" | "run" | "release"
@@ -57,7 +62,7 @@ async function loadModel(modelUrl: string): Promise<void> {
   try {
     ctx.postMessage({ type: "loading", progress: 10 } as GateResponse)
 
-    const response = await fetch(modelUrl, { credentials: "same-origin" })
+    const response = await fetch(modelUrl)
 
     if (!response.ok) {
       throw new Error(

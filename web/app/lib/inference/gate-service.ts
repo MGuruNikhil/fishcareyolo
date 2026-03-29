@@ -23,7 +23,8 @@ function getDefaultGateModelUrl(): string {
     return configured.trim()
   }
 
-  return `${import.meta.env.BASE_URL}model/fish_gate.onnx`
+  // Use the API proxy mapping to GitHub Releases to bypass CORS
+  return `/api/model-proxy?file=fish_gate.onnx`
 }
 
 const GATE_MODEL_URL = getDefaultGateModelUrl()

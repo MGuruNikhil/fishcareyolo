@@ -3,14 +3,12 @@ import { useNavigate } from "react-router-dom"
 import { useCameraContext } from "@/lib/camera/context"
 import { useDetectionContext } from "@/lib/detection/context"
 import { inferenceService, gateService, transformResults } from "@/lib/inference"
-import type { InferenceStatus } from "@/lib/inference"
 import { saveHistoryItem } from "@/lib/history"
 import { loadImageFromBlob, createAnnotatedImage } from "@/lib/utils/image"
 import { cn } from "@/lib/utils"
 
 type AnalysisStep =
   | "loading-image"
-  | "loading-model"
   | "running-gate"
   | "running-inference"
   | "processing-results"
@@ -18,7 +16,6 @@ type AnalysisStep =
 
 const STEP_LABELS: Record<AnalysisStep, string> = {
   "loading-image": "Loading image data",
-  "loading-model": "Loading AI models",
   "running-gate": "Checking for fish",
   "running-inference": "Running disease detection",
   "processing-results": "Processing detections",
@@ -27,7 +24,6 @@ const STEP_LABELS: Record<AnalysisStep, string> = {
 
 const STEPS: AnalysisStep[] = [
   "loading-image",
-  "loading-model",
   "running-gate",
   "running-inference",
   "processing-results",
@@ -57,10 +53,6 @@ export default function AnalysisPage() {
   const navigate = useNavigate()
   const ran = useRef(false)
   const [currentStep, setCurrentStep] = useState<AnalysisStep>("loading-image")
-  const [modelStatus, setModelStatus] = useState<InferenceStatus>("idle")
-  const [diseaseProgress, setDiseaseProgress] = useState(0)
-  const [gateModelStatus, setGateModelStatus] = useState<InferenceStatus>("idle")
-  const [gateProgress, setGateProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -80,37 +72,14 @@ export default function AnalysisPage() {
       setCurrentStep("loading-image")
       const img = await loadImageFromBlob(imageBlob)
 
-      // ── Step 2: Load both models in parallel ─────────────────────────────
-      setCurrentStep("loading-model")
-
-      // Track status + progress for both models
-      const unsubDisease = inferenceService.onStatusChange((state) => {
-        setModelStatus(state.status)
-        setDiseaseProgress(state.progress ?? 0)
-      })
-      const unsubGate = gateService.onStatusChange((state) => {
-        setGateModelStatus(state.status)
-        setGateProgress(state.progress ?? 0)
-      })
-
-      try {
-        // Fire both serves simultaneously — gate (~2.5 MB) will finish first
-        inferenceService.serve()
-        gateService.serve()
-
-        // Wait for both to be ready before proceeding
-        await Promise.all([
-          inferenceService.getStatus().status === "ready"
-            ? Promise.resolve()
-            : waitForReady(inferenceService),
-          gateService.getStatus().status === "ready"
-            ? Promise.resolve()
-            : waitForReady(gateService),
-        ])
-      } finally {
-        unsubDisease()
-        unsubGate()
-      }
+      // ── Step 2: Ensure models are ready ──────────────────────────────────
+      if (inferenceService.getStatus().status !== "ready") await inferenceService.serve()
+      if (gateService.getStatus().status !== "ready") await gateService.serve()
+      
+      await Promise.all([
+        inferenceService.getStatus().status === "ready" ? Promise.resolve() : waitForReady(inferenceService),
+        gateService.getStatus().status === "ready" ? Promise.resolve() : waitForReady(gateService),
+      ])
 
       // ── Step 3: Run gate check ────────────────────────────────────────────
       setCurrentStep("running-gate")
@@ -255,23 +224,6 @@ export default function AnalysisPage() {
 
                   <div className="flex flex-col">
                     <span className="text-sm font-medium tracking-wide">{STEP_LABELS[step]}</span>
-                    {isActive && step === "loading-model" && (() => {
-                      const gateLoading = gateModelStatus === "loading"
-                      const diseaseLoading = modelStatus === "loading"
-                      if (!gateLoading && !diseaseLoading) return null
-                      const combinedPct = Math.round((gateProgress + diseaseProgress) / 2)
-                      const label =
-                        gateLoading && diseaseLoading
-                          ? "Downloading models"
-                          : gateLoading
-                            ? "Downloading gate model"
-                            : "Downloading disease model"
-                      return (
-                        <span className="mt-1 text-xs tracking-wider text-muted-foreground uppercase">
-                          {label}… {combinedPct}%
-                        </span>
-                      )
-                    })()}
                   </div>
                 </li>
               )

@@ -8,7 +8,8 @@ function getDefaultModelUrl(): string {
     return configured.trim()
   }
 
-  return `${import.meta.env.BASE_URL}model/best.onnx`
+  // Use the API proxy mapping to GitHub Releases to bypass CORS
+  return `/api/model-proxy?file=best.onnx`
 }
 
 const MODEL_URL = getDefaultModelUrl()
