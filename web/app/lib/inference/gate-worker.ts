@@ -8,7 +8,7 @@ if (import.meta.env.PROD) {
 export interface GateRequest {
   id: string
   type: "load" | "run" | "release"
-  data?: number[] | string
+  data?: number[] | string | { url: string; force?: boolean }
 }
 
 export interface GateResponse {
@@ -55,19 +55,32 @@ function preprocessImage(imageData: ImageData): Float32Array {
   return data
 }
 
-async function loadModel(modelUrl: string): Promise<void> {
-  console.log("[GateWorker] Starting model load from:", modelUrl)
+async function loadModel(modelUrl: string, forceUpdate: boolean = false): Promise<void> {
+  console.log(`[GateWorker] Starting model load from: ${modelUrl}${forceUpdate ? " (Force Update)" : ""}`)
   ctx.postMessage({ type: "loading", progress: 0 } as GateResponse)
 
   try {
     ctx.postMessage({ type: "loading", progress: 10 } as GateResponse)
 
-    const response = await fetch(modelUrl)
+    const cache = await caches.open("mina-models-v1")
+    let response = await cache.match(modelUrl)
 
-    if (!response.ok) {
-      throw new Error(
-        `Gate model download failed (${response.status} ${response.statusText}) from ${modelUrl}`,
-      )
+    if (!response || forceUpdate) {
+      console.log("[GateWorker] Downloading model from network...")
+      response = await fetch(modelUrl, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" }
+      })
+
+      if (!response.ok) {
+        throw new Error(
+          `Gate model download failed (${response.status} ${response.statusText}) from ${modelUrl}`,
+        )
+      }
+
+      await cache.put(modelUrl, response.clone())
+    } else {
+      console.log("[GateWorker] Loading model from browser cache...")
     }
 
     const modelBuffer = await response.arrayBuffer()
@@ -142,7 +155,12 @@ ctx.onmessage = async (event: MessageEvent<GateRequest>) => {
   const { type, id, data } = event.data
 
   if (type === "load") {
-    await loadModel(data as string)
+    if (typeof data === "string") {
+      await loadModel(data)
+    } else {
+      const payload = data as { url: string; force?: boolean }
+      await loadModel(payload.url, payload.force)
+    }
   } else if (type === "run") {
     const imageData = new ImageData(
       new Uint8ClampedArray(data as number[]),

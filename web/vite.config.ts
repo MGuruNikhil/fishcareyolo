@@ -88,22 +88,6 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
         globPatterns: ["**/*.{js,mjs,css,html,ico,png,svg,woff2,wasm}"],
-        runtimeCaching: [
-          {
-            urlPattern: /\/api\/model-proxy.*/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "onnx-models",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
       },
     }),
   ],

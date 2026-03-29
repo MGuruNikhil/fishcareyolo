@@ -107,16 +107,16 @@ class InferenceService {
     this.modelUrl = url
   }
 
-  async serve(): Promise<void> {
-    if (this.state.status === "ready") {
+  async serve(force: boolean = false): Promise<void> {
+    if (this.state.status === "ready" && !force) {
       return
     }
 
     this.updateState({ status: "loading", progress: 0, error: null })
-    this.initWorker(this.modelUrl)
+    this.initWorker(this.modelUrl, force)
   }
 
-  private initWorker(url: string) {
+  private initWorker(url: string, force: boolean = false) {
     if (this.worker) {
       this.worker.terminate()
     }
@@ -168,7 +168,7 @@ class InferenceService {
       }
     }
 
-    this.worker.postMessage({ type: "load", id: "load", data: url })
+    this.worker.postMessage({ type: "load", id: "load", data: { url, force } })
   }
 
   async run(imageElement: HTMLImageElement | HTMLCanvasElement): Promise<InferenceResult[]> {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Monitor, Moon, Sun, Trash2, CheckCircle2, Loader2, AlertCircle, Circle, Download } from "lucide-react"
+import { Monitor, Moon, Sun, Trash2, CheckCircle2, Loader2, AlertCircle, Circle, Download, RefreshCw } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { usePwaInstall } from "@/hooks/use-pwa-install"
 import { clearHistory, getHistoryItems } from "@/lib/history"
@@ -211,6 +211,36 @@ export default function SettingsPage() {
                 </p>
               </div>
               <ModelStatusBadge status={diseaseModelStatus} />
+            </div>
+
+            {/* Divider */}
+            <div className="h-px w-full bg-border" aria-hidden="true" />
+
+            {/* Force Update models row */}
+            <div className="flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between md:px-8 bg-muted/10">
+              <div className="flex-1 min-w-0">
+                <p className="mb-1 text-base font-semibold tracking-wide text-card-foreground">
+                  Update Models
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Fetch the latest AI models from the server.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  gateService.serve(true);
+                  inferenceService.serve(true);
+                }}
+                disabled={diseaseModelStatus === "loading" || gateModelStatus === "loading"}
+                className="group flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background px-6 text-sm font-medium tracking-wide text-foreground shadow-sm transition-all hover:bg-muted active:scale-95 disabled:pointer-events-none disabled:opacity-50 md:w-auto"
+              >
+                <RefreshCw
+                  size={18}
+                  className={`transition-transform ${diseaseModelStatus === 'loading' || gateModelStatus === 'loading' ? 'animate-spin' : 'group-hover:rotate-180'}`}
+                />
+                <span>Force Update</span>
+              </button>
             </div>
           </div>
         </section>
