@@ -56,6 +56,17 @@ def export_gate_onnx(
     dummy = torch.zeros(1, 3, GATE_IMAGE_SIZE, GATE_IMAGE_SIZE)
 
     print(f"Exporting to ONNX (opset={opset}) → {output_path}")
+
+    # Patch out the internal onnxscript hook that triggers `import onnx` (and
+    # the ml_dtypes version conflict).  _add_onnxscript_fn only injects
+    # onnxscript-defined custom ops into the proto — MobileNetV3-Small uses
+    # only standard ONNX primitives, so this is a no-op for our model.
+    try:
+        import torch.onnx._internal.torchscript_exporter.onnx_proto_utils as _pu
+        _pu._add_onnxscript_fn = lambda proto, opset_version: proto
+    except (ImportError, AttributeError):
+        pass  # older torch versions don't have this; harmless to skip
+
     torch.onnx.export(
         model,
         (dummy,),
@@ -66,7 +77,7 @@ def export_gate_onnx(
         output_names=["output"],
         dynamic_axes={"images": {0: "batch"}, "output": {0: "batch"}},
         opset_version=opset,
-        dynamo=False,  # Force legacy TorchScript exporter — avoids onnxscript/ml_dtypes dep
+        dynamo=False,  # Force legacy TorchScript exporter
     )
 
     size_mb = output_path.stat().st_size / (1024 * 1024)
