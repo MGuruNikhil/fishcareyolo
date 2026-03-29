@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ChevronDown, ChevronUp, AlertCircle, AlertTriangle, CheckCircle } from "lucide-react"
+import { ChevronDown, AlertCircle, AlertTriangle, CheckCircle } from "lucide-react"
 import type { Detection } from "@/lib/model/types"
 import { DISEASE_INFO } from "@/lib/model/disease"
 
@@ -23,30 +23,6 @@ export function DetectionCard({ detection }: Props) {
     }
   })()
 
-  const severityBg = (() => {
-    switch (info.severity) {
-      case "healthy":
-        return "var(--healthy-bg)"
-      case "low":
-        return "var(--low-bg)"
-      case "medium":
-      case "high":
-        return "var(--medium-bg)"
-    }
-  })()
-
-  const severityBorder = (() => {
-    switch (info.severity) {
-      case "healthy":
-        return "var(--healthy-border)"
-      case "low":
-        return "var(--low-border)"
-      case "medium":
-      case "high":
-        return "var(--medium-border)"
-    }
-  })()
-
   const Icon = (() => {
     switch (info.severity) {
       case "healthy":
@@ -63,63 +39,61 @@ export function DetectionCard({ detection }: Props) {
   const severityLabel = info.severity === "healthy" ? "Healthy" : `${info.severity} severity`
 
   return (
-    <article
-      className="overflow-hidden rounded-md border bg-card"
-      style={{ borderLeftWidth: "3px", borderLeftColor: severityColor }}
-    >
+    <article className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-colors duration-300 hover:bg-card/80">
       <button
-        className="flex w-full min-h-14 items-center justify-between px-4 py-4 text-left transition-colors hover:bg-muted/50"
+        className="flex min-h-[4.5rem] w-full items-center justify-between px-5 py-4 text-left outline-none"
         onClick={() => setExpanded((e) => !e)}
         aria-expanded={expanded}
         aria-controls={`det-body-${detection.id}`}
       >
-        <div className="flex flex-1 min-w-0 items-start gap-3">
-          <Icon size={15} style={{ color: severityColor }} aria-hidden="true" />
-          <div className="min-w-0 flex-1">
-            <p className="mb-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-foreground">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <div className="rounded-full bg-muted/50 p-1.5 shadow-inner border border-border/50">
+            <Icon size={16} style={{ color: severityColor }} aria-hidden="true" />
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
+            <p className="truncate text-base font-semibold tracking-wide text-card-foreground">
               {info.displayName}
             </p>
             <span
-              className="inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.04em]"
-              style={{
-                backgroundColor: severityBg,
-                color: severityColor,
-                borderColor: severityBorder,
-              }}
+              className="font-mono text-[10px] font-bold uppercase tracking-widest"
+              style={{ color: severityColor }}
             >
               {severityLabel}
             </span>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-secondary-foreground">
+
+        <div className="ml-4 flex shrink-0 items-center gap-3">
           <span
-            className="font-mono text-sm font-semibold text-foreground"
+            className="font-mono text-lg font-light tracking-wider text-card-foreground"
             aria-label={`${(detection.confidence * 100).toFixed(0)}% confidence`}
           >
             {(detection.confidence * 100).toFixed(0)}%
           </span>
-          {expanded ? (
-            <ChevronUp size={14} aria-hidden="true" />
-          ) : (
-            <ChevronDown size={14} aria-hidden="true" />
-          )}
+          <ChevronDown
+            size={18}
+            className={`text-muted-foreground transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
         </div>
       </button>
 
       {expanded && (
-        <div className="flex flex-col gap-4 border-t px-4 pb-4" id={`det-body-${detection.id}`}>
-          <p className="pt-3 text-sm leading-relaxed text-secondary-foreground">
-            {info.description}
-          </p>
+        <div
+          className="flex flex-col gap-6 border-t border-border px-5 pb-6 pt-5 animate-in fade-in slide-in-from-top-2 duration-300"
+          id={`det-body-${detection.id}`}
+        >
+          <p className="text-sm leading-relaxed text-muted-foreground">{info.description}</p>
 
           {info.symptoms.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <h4 className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="flex flex-col gap-3">
+              <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Symptoms
               </h4>
-              <ul className="flex flex-col gap-1 pl-5">
+              <ul className="ml-4 flex flex-col gap-1.5 list-disc list-outside marker:text-muted-foreground/50">
                 {info.symptoms.map((s: string, i: number) => (
-                  <li key={i} className="text-sm leading-[1.55] text-secondary-foreground">
+                  <li key={i} className="text-sm leading-[1.6] text-foreground/80">
                     {s}
                   </li>
                 ))}
@@ -128,13 +102,13 @@ export function DetectionCard({ detection }: Props) {
           )}
 
           {info.treatments.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <h4 className="font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="flex flex-col gap-3">
+              <h4 className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Treatment
               </h4>
-              <ol className="flex flex-col gap-1 pl-5">
+              <ol className="ml-4 flex flex-col gap-1.5 list-decimal list-outside marker:text-muted-foreground/50 marker:font-mono marker:text-xs">
                 {info.treatments.map((t: string, i: number) => (
-                  <li key={i} className="text-sm leading-[1.55] text-secondary-foreground">
+                  <li key={i} className="text-sm leading-[1.6] text-foreground/80 pl-1">
                     {t}
                   </li>
                 ))}
