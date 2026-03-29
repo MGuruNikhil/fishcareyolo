@@ -58,6 +58,9 @@ export default function AnalysisPage() {
   const ran = useRef(false)
   const [currentStep, setCurrentStep] = useState<AnalysisStep>("loading-image")
   const [modelStatus, setModelStatus] = useState<InferenceStatus>("idle")
+  const [diseaseProgress, setDiseaseProgress] = useState(0)
+  const [gateModelStatus, setGateModelStatus] = useState<InferenceStatus>("idle")
+  const [gateProgress, setGateProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -80,9 +83,14 @@ export default function AnalysisPage() {
       // ── Step 2: Load both models in parallel ─────────────────────────────
       setCurrentStep("loading-model")
 
-      // Mirror the disease-model status for the loading indicator
+      // Track status + progress for both models
       const unsubDisease = inferenceService.onStatusChange((state) => {
         setModelStatus(state.status)
+        setDiseaseProgress(state.progress ?? 0)
+      })
+      const unsubGate = gateService.onStatusChange((state) => {
+        setGateModelStatus(state.status)
+        setGateProgress(state.progress ?? 0)
       })
 
       try {
@@ -101,6 +109,7 @@ export default function AnalysisPage() {
         ])
       } finally {
         unsubDisease()
+        unsubGate()
       }
 
       // ── Step 3: Run gate check ────────────────────────────────────────────
@@ -240,11 +249,23 @@ export default function AnalysisPage() {
 
                   <div className="flex flex-col">
                     <span className="text-sm font-medium tracking-wide">{STEP_LABELS[step]}</span>
-                    {isActive && step === "loading-model" && modelStatus === "loading" && (
-                      <span className="mt-1 text-xs tracking-wider text-muted-foreground uppercase">
-                        Downloading...
-                      </span>
-                    )}
+                    {isActive && step === "loading-model" && (() => {
+                      const gateLoading = gateModelStatus === "loading"
+                      const diseaseLoading = modelStatus === "loading"
+                      if (!gateLoading && !diseaseLoading) return null
+                      const combinedPct = Math.round((gateProgress + diseaseProgress) / 2)
+                      const label =
+                        gateLoading && diseaseLoading
+                          ? "Downloading models"
+                          : gateLoading
+                            ? "Downloading gate model"
+                            : "Downloading disease model"
+                      return (
+                        <span className="mt-1 text-xs tracking-wider text-muted-foreground uppercase">
+                          {label}… {combinedPct}%
+                        </span>
+                      )
+                    })()}
                   </div>
                 </li>
               )

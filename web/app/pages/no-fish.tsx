@@ -1,16 +1,33 @@
 import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
 import { Camera } from "lucide-react"
 import { useDetectionContext } from "@/lib/detection/context"
 import { Button } from "@/components/ui/button"
+
+const REDIRECT_DELAY_MS = 3000
 
 export default function NoFishPage() {
   const { currentOutcome } = useDetectionContext()
   const navigate = useNavigate()
 
+  // True when there is no gate context (deep-link / refresh / back navigation)
+  const isContextless = currentOutcome === null || currentOutcome.kind !== "no_fish"
+
   const confidence =
     currentOutcome?.kind === "no_fish"
       ? Math.round((1 - currentOutcome.gateConfidence) * 100)
       : null
+
+  // Auto-redirect to home when context is missing
+  const [redirecting, setRedirecting] = useState(false)
+  useEffect(() => {
+    if (!isContextless) return
+    setRedirecting(true)
+    const timer = setTimeout(() => {
+      navigate("/", { replace: true })
+    }, REDIRECT_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [isContextless, navigate])
 
   return (
     <div
@@ -42,6 +59,12 @@ export default function NoFishPage() {
           {confidence !== null && (
             <p className="text-xs font-mono text-muted-foreground/60">
               not-fish confidence: {confidence}%
+            </p>
+          )}
+          {/* Shown only on context-less visits (deep-link / refresh) */}
+          {redirecting && (
+            <p className="text-xs font-mono text-muted-foreground/50 animate-pulse">
+              Redirecting to home…
             </p>
           )}
         </div>
