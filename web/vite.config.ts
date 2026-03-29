@@ -72,6 +72,9 @@ export default defineConfig({
         short_name: "mina",
         description: "fish disease detection using yolo model",
         theme_color: "#ffffff",
+        background_color: "#ffffff",
+        display: "standalone",
+        start_url: "/",
         icons: [
           {
             src: "pwa-192x192.png",
@@ -83,7 +86,16 @@ export default defineConfig({
             sizes: "512x512",
             type: "image/png",
           },
+          {
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
         ],
+      },
+      devOptions: {
+        enabled: true,
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
