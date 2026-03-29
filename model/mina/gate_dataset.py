@@ -147,7 +147,10 @@ def build_gate_dataset(
             dest = target_dir / split / cls
             dest.mkdir(parents=True, exist_ok=True)
             for src in paths:
-                shutil.copy2(src, dest / src.name)
+                # Prefix with parent folder name to avoid collisions between
+                # species that share the same sequential filenames (e.g. 00001.png)
+                unique_name = f"{src.parent.name}_{src.name}"
+                shutil.copy2(src, dest / unique_name)
 
     # Summary
     print("\nDataset ready:")
