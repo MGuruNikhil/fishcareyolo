@@ -15,7 +15,7 @@ export interface GateResponse {
 }
 
 const GATE_SIZE = 224
-const GATE_THRESHOLD = 0.6
+const GATE_THRESHOLD = 0.45
 
 // ImageNet normalisation constants (must match training preprocessing)
 const IMAGENET_MEAN = [0.485, 0.456, 0.406]

@@ -28,6 +28,8 @@ function getDefaultGateModelUrl(): string {
 
 const GATE_MODEL_URL = getDefaultGateModelUrl()
 const GATE_SIZE = 224
+// Torchvision default: resize shortest edge to this before cropping
+const RESIZE_TO = 256
 
 class GateService {
   private worker: Worker | null = null
@@ -127,7 +129,33 @@ class GateService {
       throw new Error("Gate model not ready. Call serve() first.")
     }
 
-    // Scale-to-fill resize to 224×224 (no letterbox needed for classifier)
+    // ── Preprocessing: match torchvision Resize(256) + CenterCrop(224) ────
+    //
+    // Standard MobileNetV3 fine-tuning uses:
+    //   transforms.Resize(256)      → scale shortest edge to 256, keep AR
+    //   transforms.CenterCrop(224)  → take center 224×224 square
+    //
+    // We replicate both steps in a single drawImage() call by computing
+    // the source rectangle in the *original* image's coordinate space:
+    //
+    //   scale     = 256 / min(srcW, srcH)
+    //   srcCropSz = 224 / scale            ← size of crop in original pixels
+    //   srcCropX  = (srcW - srcCropSz) / 2 ← centered horizontally
+    //   srcCropY  = (srcH - srcCropSz) / 2 ← centered vertically
+    //
+    // drawImage(src, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH)
+    // scales the source rect into the destination rect in one GPU-accelerated op.
+
+    const srcW =
+      "naturalWidth" in imageElement ? imageElement.naturalWidth : imageElement.width
+    const srcH =
+      "naturalWidth" in imageElement ? imageElement.naturalHeight : imageElement.height
+
+    const scale = RESIZE_TO / Math.min(srcW, srcH)
+    const srcCropSz = GATE_SIZE / scale          // 224 back-projected into source space
+    const srcCropX = (srcW - srcCropSz) / 2
+    const srcCropY = (srcH - srcCropSz) / 2
+
     const canvas = document.createElement("canvas")
     canvas.width = GATE_SIZE
     canvas.height = GATE_SIZE
@@ -136,7 +164,12 @@ class GateService {
       throw new Error("Failed to get canvas context for gate preprocessing")
     }
 
-    canvasCtx.drawImage(imageElement, 0, 0, GATE_SIZE, GATE_SIZE)
+    // Single-pass: crop center square (aspect-ratio-preserving) and scale to 224×224
+    canvasCtx.drawImage(
+      imageElement,
+      srcCropX, srcCropY, srcCropSz, srcCropSz, // source: center square in original
+      0, 0, GATE_SIZE, GATE_SIZE,               // dest: full 224×224 canvas
+    )
     const imageData = canvasCtx.getImageData(0, 0, GATE_SIZE, GATE_SIZE)
 
     const id = crypto.randomUUID()

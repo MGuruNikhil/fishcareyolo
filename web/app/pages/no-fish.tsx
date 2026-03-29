@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
-import { Camera } from "lucide-react"
+import { Camera, FlaskConical } from "lucide-react"
 import { useDetectionContext } from "@/lib/detection/context"
 import { Button } from "@/components/ui/button"
 
 const REDIRECT_DELAY_MS = 3000
 
 export default function NoFishPage() {
-  const { currentOutcome } = useDetectionContext()
+  const { currentOutcome, setBypassGate } = useDetectionContext()
   const navigate = useNavigate()
 
   // True when there is no gate context (deep-link / refresh / back navigation)
@@ -83,15 +83,33 @@ export default function NoFishPage() {
           ))}
         </ul>
 
-        {/* CTA */}
-        <Button
-          id="no-fish-try-again"
-          onClick={() => navigate("/")}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-foreground text-background font-semibold tracking-wide shadow-lg transition-all hover:opacity-90 active:scale-95"
-        >
-          <Camera size={18} aria-hidden="true" />
-          <span>Try Again</span>
-        </Button>
+        {/* CTAs */}
+        <div className="flex w-full flex-col gap-3">
+          <Button
+            id="no-fish-try-again"
+            onClick={() => navigate("/")}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-foreground text-background font-semibold tracking-wide shadow-lg transition-all hover:opacity-90 active:scale-95"
+          >
+            <Camera size={18} aria-hidden="true" />
+            <span>Try Again</span>
+          </Button>
+
+          {/* Bypass button — shown only when we have a real gate result */}
+          {!isContextless && (
+            <Button
+              id="no-fish-analyse-anyway"
+              variant="ghost"
+              onClick={() => {
+                setBypassGate(true)
+                navigate("/analysis", { replace: true })
+              }}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-2xl text-muted-foreground text-sm tracking-wide transition-all hover:text-foreground hover:bg-muted/50 active:scale-95"
+            >
+              <FlaskConical size={15} aria-hidden="true" />
+              <span>Analyse anyway</span>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

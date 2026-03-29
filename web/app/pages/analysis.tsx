@@ -53,7 +53,7 @@ function waitForReady(
 
 export default function AnalysisPage() {
   const { capturedImage } = useCameraContext()
-  const { setCurrentOutcome } = useDetectionContext()
+  const { setCurrentOutcome, bypassGate, setBypassGate } = useDetectionContext()
   const navigate = useNavigate()
   const ran = useRef(false)
   const [currentStep, setCurrentStep] = useState<AnalysisStep>("loading-image")
@@ -114,13 +114,19 @@ export default function AnalysisPage() {
 
       // ── Step 3: Run gate check ────────────────────────────────────────────
       setCurrentStep("running-gate")
-      const gateResult = await gateService.run(img)
 
-      if (!gateResult.isFish) {
-        // Not a fish — show the no-fish page; do NOT save to history
-        setCurrentOutcome({ kind: "no_fish", gateConfidence: gateResult.confidence })
-        navigate("/no-fish", { replace: true })
-        return
+      // bypassGate is set when the user taps "Analyse anyway" on the no-fish page
+      const skipGate = bypassGate
+      if (skipGate) setBypassGate(false) // consume the flag immediately
+
+      if (!skipGate) {
+        const gateResult = await gateService.run(img)
+        if (!gateResult.isFish) {
+          // Not a fish — show the no-fish page; do NOT save to history
+          setCurrentOutcome({ kind: "no_fish", gateConfidence: gateResult.confidence })
+          navigate("/no-fish", { replace: true })
+          return
+        }
       }
 
       // ── Step 4: Run disease inference (gate passed) ───────────────────────

@@ -4,18 +4,23 @@ import type { AnalysisOutcome } from "@/lib/model/types"
 interface DetectionState {
   currentOutcome: AnalysisOutcome | null
   setCurrentOutcome: (outcome: AnalysisOutcome | null) => void
+  bypassGate: boolean
+  setBypassGate: (bypass: boolean) => void
 }
 
 const DetectionContext = createContext<DetectionState | null>(null)
 
 export function DetectionProvider({ children }: { children: React.ReactNode }) {
   const [currentOutcome, setCurrentOutcome] = useState<AnalysisOutcome | null>(null)
+  const [bypassGate, setBypassGate] = useState(false)
 
   return (
     <DetectionContext.Provider
       value={{
         currentOutcome,
         setCurrentOutcome,
+        bypassGate,
+        setBypassGate,
       }}
     >
       {children}
