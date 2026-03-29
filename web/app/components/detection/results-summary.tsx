@@ -20,40 +20,56 @@ export function ResultsSummary({ detections }: Props) {
 
   if (allHealthy) {
     return (
-      <div
-        className="flex items-center gap-2 rounded-md border px-4 py-3 text-sm font-medium"
-        style={{
-          backgroundColor: "var(--healthy-bg)",
-          borderColor: "var(--healthy-border)",
-          color: "var(--healthy)",
-        }}
-        role="status"
-      >
-        <CheckCircle size={18} aria-hidden="true" />
-        <span>No diseases detected — fish appears healthy</span>
+      <div className="flex items-center gap-5" role="status">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border/50 bg-muted/50 shadow-inner">
+          <CheckCircle size={24} style={{ color: "var(--healthy)" }} aria-hidden="true" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold tracking-wide text-foreground">
+            Fish appears healthy
+          </h2>
+          <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
+            No diseases detected
+          </span>
+        </div>
       </div>
     )
   }
 
-  const borderColor = highOrMediumCount > 0 ? "var(--medium-border)" : "var(--low-border)"
-  const bgColor = highOrMediumCount > 0 ? "var(--medium-bg)" : "var(--low-bg)"
   const iconColor = highOrMediumCount > 0 ? "var(--medium)" : "var(--low)"
 
   return (
-    <div
-      className="flex items-start gap-2 rounded-md border px-4 py-3 text-sm font-medium text-foreground"
-      style={{
-        borderColor,
-        backgroundColor: bgColor,
-      }}
-      role="status"
-    >
-      <AlertCircle size={18} className="shrink-0" style={{ color: iconColor }} aria-hidden="true" />
-      <span>
-        {detections.length} detection
-        {detections.length !== 1 ? "s" : ""} found
-        {highOrMediumCount > 0 ? ` — ${highOrMediumCount} require urgent attention` : ""}
-      </span>
+    <div className="flex items-center gap-5" role="status">
+      <div className="relative flex size-12 shrink-0 items-center justify-center rounded-full border border-border/50 bg-muted/50 shadow-inner">
+        <AlertCircle size={24} style={{ color: iconColor }} aria-hidden="true" />
+        {/* Subtle ping animation for urgent alerts */}
+        {highOrMediumCount > 0 && (
+          <span
+            className="absolute inset-0 rounded-full border border-foreground/10 animate-ping opacity-50"
+            style={{ borderColor: iconColor }}
+            aria-hidden="true"
+          />
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold tracking-wide text-foreground">
+          {detections.length} Detection{detections.length !== 1 ? "s" : ""} Found
+        </h2>
+
+        {highOrMediumCount > 0 ? (
+          <span
+            className="font-mono text-[10px] font-bold tracking-widest uppercase"
+            style={{ color: iconColor }}
+          >
+            {highOrMediumCount} Require urgent attention
+          </span>
+        ) : (
+          <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
+            Review suggested treatments
+          </span>
+        )}
+      </div>
     </div>
   )
 }

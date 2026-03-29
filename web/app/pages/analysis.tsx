@@ -6,6 +6,7 @@ import { inferenceService, transformResults } from "@/lib/inference"
 import type { InferenceStatus } from "@/lib/inference"
 import { saveHistoryItem } from "@/lib/history"
 import { loadImageFromBlob, createAnnotatedImage } from "@/lib/utils/image"
+import { cn } from "@/lib/utils"
 
 type AnalysisStep =
   | "loading-image"
@@ -126,21 +127,30 @@ export default function AnalysisPage() {
 
   if (error) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8" role="alert">
-        <div className="flex w-full max-w-xs flex-col items-center gap-6">
-          <div className="relative size-[72px] flex items-center justify-center" aria-hidden="true">
-            <div className="text-destructive text-4xl">!</div>
+      <div
+        className="flex h-screen w-full flex-col items-center justify-center bg-background p-6 transition-colors duration-300"
+        role="alert"
+      >
+        <div className="flex w-full max-w-[320px] flex-col items-center gap-6 rounded-[2rem] border border-destructive/20 bg-destructive/10 p-10 shadow-lg backdrop-blur-md">
+          <div
+            className="relative flex size-20 items-center justify-center rounded-full bg-destructive/20"
+            aria-hidden="true"
+          >
+            <div className="text-4xl font-light text-destructive">!</div>
+            {/* Pulsing error ring */}
+            <div className="absolute inset-0 rounded-full border border-destructive/30 animate-ping" />
           </div>
 
-          <p className="font-mono text-xl font-semibold tracking-wide text-destructive">
-            Analysis Failed
-          </p>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <p className="text-xl font-semibold tracking-wide text-foreground">Analysis Failed</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{error}</p>
+          </div>
 
-          <p className="text-center text-sm text-muted-foreground">{error}</p>
-
-          <p className="font-mono text-xs text-muted-foreground tracking-wide">
-            Returning to preview...
-          </p>
+          <div className="mt-4 rounded-full bg-muted/50 px-4 py-2">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">
+              Returning to preview...
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -148,52 +158,81 @@ export default function AnalysisPage() {
 
   return (
     <div
-      className="flex flex-1 items-center justify-center p-8"
+      className="flex h-screen w-full flex-col items-center justify-center bg-background p-6 transition-colors duration-300"
       role="status"
       aria-label="Analysing image, please wait"
     >
-      <div className="flex w-full max-w-xs flex-col items-center gap-6">
-        {/* Spinner */}
-        <div className="relative size-[72px]" aria-hidden="true">
-          <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-primary animate-spin" />
+      <div className="flex w-full max-w-[340px] flex-col items-center gap-10">
+        {/* Modern Dual-Ring Scanner */}
+        <div className="relative flex flex-col items-center gap-6">
+          <div className="relative size-[88px]" aria-hidden="true">
+            {/* Outer Ring */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-muted/20 border-t-foreground/80 animate-[spin_1.5s_linear_infinite]" />
+            {/* Inner Ring */}
+            <div className="absolute inset-2.5 rounded-full border-[3px] border-muted/20 border-b-foreground/50 animate-[spin_2s_linear_infinite_reverse]" />
+            {/* Center Pulse */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="size-2 rounded-full bg-foreground animate-pulse" />
+            </div>
+          </div>
+          <p className="text-2xl font-medium tracking-widest text-foreground">ANALYSING</p>
         </div>
 
-        <p className="font-mono text-xl font-semibold tracking-wide">Analysing</p>
+        {/* Glassmorphism Steps Card */}
+        <div className="w-full rounded-[2rem] border border-border bg-card p-8 shadow-lg">
+          <ul className="flex w-full flex-col gap-5" aria-hidden="true">
+            {STEPS.map((step, i) => {
+              const isActive = i === currentStepIndex
+              const isCompleted = i < currentStepIndex
 
-        {/* Steps */}
-        <ul className="flex w-full flex-col gap-3" aria-hidden="true">
-          {STEPS.map((step, i) => {
-            const isActive = i === currentStepIndex
-            const isCompleted = i < currentStepIndex
+              return (
+                <li
+                  key={step}
+                  className={cn(
+                    "flex items-center gap-4 transition-all duration-500",
+                    isCompleted && "text-muted-foreground",
+                    isActive && "text-foreground scale-[1.02] transform",
+                    !isCompleted && !isActive && "text-muted-foreground/40",
+                  )}
+                >
+                  <div className="relative flex size-3 shrink-0 items-center justify-center">
+                    {/* Status Dot */}
+                    <span
+                      className={cn(
+                        "absolute size-full rounded-full transition-all duration-500",
+                        isCompleted && "bg-muted-foreground/40 scale-75",
+                        isActive && "bg-foreground shadow-[0_0_12px_rgba(var(--foreground),0.8)]",
+                        !isCompleted &&
+                          !isActive &&
+                          "border border-muted-foreground/20 bg-transparent",
+                      )}
+                    />
+                    {/* Active Ping Effect */}
+                    {isActive && (
+                      <span className="absolute size-full rounded-full bg-foreground/50 animate-ping" />
+                    )}
+                  </div>
 
-            return (
-              <li
-                key={step}
-                className={`flex items-center gap-3 font-mono text-sm transition-all duration-300 ${
-                  isCompleted
-                    ? "text-secondary-foreground"
-                    : isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground opacity-50"
-                }`}
-              >
-                <span
-                  className={`size-1.5 shrink-0 rounded-full transition-all duration-300 ${
-                    isCompleted || isActive ? "bg-primary" : "bg-muted-foreground"
-                  }`}
-                />
-                <span>{STEP_LABELS[step]}</span>
-                {isActive && step === "loading-model" && modelStatus === "loading" && (
-                  <span className="text-xs text-muted-foreground">(downloading...)</span>
-                )}
-              </li>
-            )
-          })}
-        </ul>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium tracking-wide">{STEP_LABELS[step]}</span>
+                    {isActive && step === "loading-model" && modelStatus === "loading" && (
+                      <span className="mt-1 text-xs tracking-wider text-muted-foreground uppercase">
+                        Downloading...
+                      </span>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
 
-        <p className="font-mono text-xs text-muted-foreground tracking-wide">
-          Running on-device — no data is transmitted
-        </p>
+        {/* Privacy Badge */}
+        <div className="mt-4 rounded-full border border-border/50 bg-muted/30 px-5 py-2.5">
+          <p className="text-center text-xs font-medium tracking-wide text-muted-foreground">
+            Running on-device — no data is transmitted
+          </p>
+        </div>
       </div>
     </div>
   )
