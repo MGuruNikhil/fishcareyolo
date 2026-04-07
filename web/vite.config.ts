@@ -59,8 +59,11 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: "node_modules/onnxruntime-web/dist/*.wasm",
-          dest: ".",
+          // Copy ONNX Runtime WASM and MJS files to build root
+          // The worker sets ort.env.wasm.wasmPaths = "/" so these must be at root level
+          src: "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded*.{wasm,mjs}",
+          dest: "",
+          rename: { stripBase: true },
         },
       ],
     }),
